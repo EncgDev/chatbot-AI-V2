@@ -3,9 +3,20 @@ config.py — Configuration de l'application Flask NORA
 Auteur : Yahya
 """
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+# Charge le fichier .env du dossier backend/ ou de la racine
+_backend_dir = Path(__file__).resolve().parent
+_backend_env = _backend_dir / ".env"
+_root_env = _backend_dir.parent / ".env"
+
+if _backend_env.exists():
+    load_dotenv(dotenv_path=_backend_env)
+elif _root_env.exists():
+    load_dotenv(dotenv_path=_root_env)
+else:
+    load_dotenv()
 
 
 class Config:
