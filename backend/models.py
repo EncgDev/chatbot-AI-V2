@@ -1,87 +1,79 @@
 """
 models.py — Modèles SQLAlchemy pour NORA
-Auteur : Yahya / Soufiane
+Auteur : Yahya
+Schéma : Category + QA (correspond exactement à init.sql de Soufiane)
 """
-from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
 
 class Category(db.Model):
-    """Modèle de catégorie de FAQ."""
+    """
+    TABLE categories
+    ─────────────────
+    id   INT PRIMARY KEY
+    name VARCHAR(80)
+    """
     __tablename__ = "categories"
 
-    id          = db.Column(db.Integer, primary_key=True)
-    name        = db.Column(db.String(100), nullable=False, unique=True)
-    description = db.Column(db.Text)
-    icon        = db.Column(db.String(50))
-    color       = db.Column(db.String(20))
-    created_at  = db.Column(
-        db.DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
-    )
+    id   = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
 
-    # Relation avec les FAQs
-    faqs = db.relationship(
-        "FAQ",
-        back_populates="category",
-        lazy="dynamic",
-        cascade="all, delete-orphan"
-    )
+    # Relation One-to-Many vers QA
+    qas = db.relationship("QA", back_populates="category", lazy="dynamic")
 
     def to_dict(self):
+        """Sérialisation JSON — utilisée par GET /api/categories."""
         return {
-            "id":          self.id,
-            "name":        self.name,
-            "description": self.description,
-            "icon":        self.icon,
-            "color":       self.color,
-            "faq_count":   self.faqs.count(),
+            "id":        self.id,
+            "name":      self.name,
+            "qa_count":  self.qas.count(),
         }
 
     def __repr__(self):
-        return f"<Category {self.name}>"
+        return f"<Category {self.id}: {self.name}>"
 
 
-class FAQ(db.Model):
-    """Modèle de question/réponse."""
-    __tablename__ = "faqs"
+class QA(db.Model):
+    """
+    TABLE QAs
+    ─────────────────────────────────────────────
+    id          SERIAL PRIMARY KEY
+    question    TEXT NOT NULL
+    response    TEXT NOT NULL
+    category_id INT  NOT NULL  FK → categories(id)
+    """
+    __tablename__ = "qas"   # SQLAlchemy utilise le nom en minuscules
 
-    id          = db.Column(db.Integer, primary_key=True)
+    id          = db.Column(db.Integer,     primary_key=True)
+    question    = db.Column(db.Text,        nullable=False)
+    response    = db.Column(db.Text,        nullable=False)
     category_id = db.Column(
         db.Integer,
-        db.ForeignKey("categories.id", ondelete="CASCADE"),
+        db.ForeignKey("categories.id"),
         nullable=False
     )
-    question    = db.Column(db.Text, nullable=False)
-    reponse     = db.Column(db.Text, nullable=False)
-    filiere     = db.Column(db.String(100))
-    source      = db.Column(db.String(200))
-    keywords    = db.Column(db.Text)
-    views       = db.Column(db.Integer, default=0)
-    created_at  = db.Column(
-        db.DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
-    )
 
-    # Relation inverse
-    category = db.relationship("Category", back_populates="faqs")
+    # Relation inverse vers Category
+    category = db.relationship("Category", back_populates="qas")
 
     def to_dict(self, include_category=False):
+        """
+        Sérialisation JSON — utilisée par :
+          GET  /api/qas?category_id=N
+          POST /api/chat/v1
+          POST /api/chat/v2
+        """
         data = {
             "id":          self.id,
-            "category_id": self.category_id,
             "question":    self.question,
-            "reponse":     self.reponse,
-            "filiere":     self.filiere,
-            "source":      self.source,
-            "keywords":    self.keywords,
-            "views":       self.views,
+            "response":    self.response,
+            "category_id": self.category_id,
         }
         if include_category and self.category:
             data["category"] = self.category.to_dict()
         return data
 
     def __repr__(self):
-        return f"<FAQ {self.id}: {self.question[:50]}>"
+        return f"<QA {self.id}: {self.question[:60]}>"

@@ -2,12 +2,16 @@
 app.py — API REST Flask pour NORA (Chatbot ENCG Marrakech)
 Auteur : Yahya
 
+Schéma BDD (Soufiane) :
+  TABLE categories : id (INT PK), name (VARCHAR 80)
+  TABLE QAs        : id (SERIAL PK), question (TEXT), response (TEXT), category_id (INT FK)
+
 Endpoints :
-  GET  /api/health              — Healthcheck
-  GET  /api/categories          — Liste des catégories
-  GET  /api/faqs?category_id=N  — FAQs d'une catégorie
-  POST /api/chat/v1             — Chat par recherche SQL (mots-clés LIKE)
-  POST /api/chat/v2             — Chat IA avec RAG + Google Gemini
+  GET  /api/health                — Healthcheck API + BDD
+  GET  /api/categories            — Liste des 6 catégories
+  GET  /api/qas?category_id=<id>  — QAs d'une catégorie
+  POST /api/chat/v1               — Recherche SQL LIKE (sans IA)
+  POST /api/chat/v2               — RAG + Google Gemini
 """
 
 import os
@@ -17,7 +21,7 @@ from flask_cors import CORS
 from sqlalchemy import text, or_
 
 from config import config_map
-from models import db, Category, FAQ
+from models import db, Category, QA
 
 # ─── Logging ─────────────────────────────────────────────────
 logging.basicConfig(
@@ -46,10 +50,10 @@ def create_app(env: str = None) -> Flask:
             db.engine.connect()
             logger.info("✅ Connexion PostgreSQL établie.")
         except Exception as e:
-            logger.error(f"❌ Erreur de connexion BDD : {e}")
+            logger.error(f"❌ Erreur connexion BDD : {e}")
 
     # ==========================================================
-    #  ROUTE : Healthcheck
+    #  GET /api/health — Healthcheck
     # ==========================================================
     @app.route("/api/health", methods=["GET"])
     def health():
@@ -66,11 +70,24 @@ def create_app(env: str = None) -> Flask:
         })
 
     # ==========================================================
-    #  ROUTE : GET /api/categories
+    #  GET /api/categories — Liste des catégories
+    #
+    #  Réponse JSON attendue par le frontend (CategoryGrid) :
+    #  {
+    #    "success": true,
+    #    "data": [
+    #      { "id": 1, "name": "Formations",              "qa_count": 4 },
+    #      { "id": 2, "name": "Horaires & emploi du temps", "qa_count": 3 },
+    #      { "id": 3, "name": "Admission & inscription", "qa_count": 4 },
+    #      { "id": 4, "name": "À propos de l'ENCG",     "qa_count": 3 },
+    #      { "id": 5, "name": "Vie étudiante & clubs",  "qa_count": 3 },
+    #      { "id": 6, "name": "Contact & localisation",  "qa_count": 4 }
+    #    ],
+    #    "total": 6
+    #  }
     # ==========================================================
     @app.route("/api/categories", methods=["GET"])
     def get_categories():
-        """Renvoie la liste de toutes les thématiques."""
         try:
             categories = Category.query.order_by(Category.id).all()
             return jsonify({
@@ -83,41 +100,60 @@ def create_app(env: str = None) -> Flask:
             return jsonify({"success": False, "error": str(e)}), 500
 
     # ==========================================================
-    #  ROUTE : GET /api/faqs?category_id=<id>
+    #  GET /api/qas?category_id=<id> — QAs d'une catégorie
+    #
+    #  Paramètre : category_id (int, optionnel)
+    #  Si absent  → retourne toutes les QAs
+    #
+    #  Réponse JSON attendue par le frontend :
+    #  {
+    #    "success": true,
+    #    "data": [
+    #      {
+    #        "id": 1,
+    #        "question": "Quelles sont les filières ?",
+    #        "response": "L'ENCG propose...",
+    #        "category_id": 1,
+    #        "category": { "id": 1, "name": "Formations", "qa_count": 4 }
+    #      }, ...
+    #    ],
+    #    "total": 4
+    #  }
     # ==========================================================
-    @app.route("/api/faqs", methods=["GET"])
-    def get_faqs():
-        """Renvoie les FAQs d'une catégorie (ou toutes si pas de filtre)."""
+    @app.route("/api/qas", methods=["GET"])
+    def get_qas():
         try:
             category_id = request.args.get("category_id", type=int)
-            query = FAQ.query
+            query = QA.query
             if category_id:
                 query = query.filter_by(category_id=category_id)
 
-            faqs = query.order_by(FAQ.id).all()
+            qas = query.order_by(QA.id).all()
             return jsonify({
                 "success": True,
-                "data":    [f.to_dict(include_category=True) for f in faqs],
-                "total":   len(faqs),
+                "data":    [q.to_dict(include_category=True) for q in qas],
+                "total":   len(qas),
             })
         except Exception as e:
-            logger.error(f"Erreur get_faqs: {e}")
+            logger.error(f"Erreur get_qas: {e}")
             return jsonify({"success": False, "error": str(e)}), 500
 
     # ==========================================================
-    #  ROUTE : POST /api/chat/v1  — Recherche SQL LIKE
+    #  POST /api/chat/v1 — Recherche SQL LIKE (Version sans IA)
+    #
+    #  Body  : { "message": "comment s inscrire" }
+    #
+    #  Réponse JSON :
+    #  {
+    #    "success": true,
+    #    "version": "v1",
+    #    "response": "Pour s'inscrire à l'ENCG...",
+    #    "question_matched": "Comment s'inscrire ?",
+    #    "category_id": 3
+    #  }
     # ==========================================================
     @app.route("/api/chat/v1", methods=["POST"])
     def chat_v1():
-        """
-        Version 1 — Recherche par mots-clés (SQL LIKE).
-        Body JSON : {"message": "..."}
-
-        Algorithme :
-          1. Tokenise le message en mots-clés (longueur > 2)
-          2. Recherche LIKE sur question, reponse et keywords
-          3. Retourne la meilleure correspondance
-        """
         data    = request.get_json(silent=True) or {}
         message = data.get("message", "").strip()
 
@@ -125,7 +161,7 @@ def create_app(env: str = None) -> Flask:
             return jsonify({"success": False, "error": "Le champ 'message' est requis."}), 400
 
         try:
-            # Tokenisation
+            # Tokenisation : mots de longueur > 2
             tokens = [w.lower() for w in message.split() if len(w) > 2]
 
             if not tokens:
@@ -133,21 +169,18 @@ def create_app(env: str = None) -> Flask:
                     "success":  True,
                     "version":  "v1",
                     "response": "Je n'ai pas compris votre question. Pouvez-vous reformuler ?",
-                    "source":   "default",
-                    "faqs":     [],
                 })
 
-            # Construction des conditions LIKE (max 5 tokens)
+            # Recherche LIKE sur question ET response (max 5 tokens)
             conditions = []
             for token in tokens[:5]:
                 pat = f"%{token}%"
                 conditions.append(or_(
-                    FAQ.question.ilike(pat),
-                    FAQ.reponse.ilike(pat),
-                    FAQ.keywords.ilike(pat),
+                    QA.question.ilike(pat),
+                    QA.response.ilike(pat),
                 ))
 
-            results = FAQ.query.filter(or_(*conditions)).limit(3).all()
+            results = QA.query.filter(or_(*conditions)).limit(3).all()
 
             if not results:
                 return jsonify({
@@ -155,26 +188,19 @@ def create_app(env: str = None) -> Flask:
                     "version":  "v1",
                     "response": (
                         "Je suis désolée, je n'ai pas trouvé de réponse à votre question.\n"
-                        "Contactez l'administration de l'ENCG Marrakech :\n"
-                        "📞 +212 (0)5 24 33 85 12\n"
-                        "📧 contact@encg-marrakech.ac.ma"
+                        "Contactez l'ENCG Marrakech directement :\n"
+                        "📞 +212 524 33 70 26\n"
+                        "📧 contact@encg-marrakech.uca.ma"
                     ),
-                    "source":   "default",
-                    "faqs":     [],
                 })
 
-            # Incrémenter les vues de la meilleure réponse
-            best       = results[0]
-            best.views += 1
-            db.session.commit()
-
+            best = results[0]
             return jsonify({
                 "success":          True,
                 "version":          "v1",
-                "response":         best.reponse,
+                "response":         best.response,
                 "question_matched": best.question,
                 "category_id":      best.category_id,
-                "faqs":             [f.to_dict() for f in results],
             })
 
         except Exception as e:
@@ -182,20 +208,22 @@ def create_app(env: str = None) -> Flask:
             return jsonify({"success": False, "error": str(e)}), 500
 
     # ==========================================================
-    #  ROUTE : POST /api/chat/v2  — RAG + Google Gemini
+    #  POST /api/chat/v2 — RAG + Google Gemini (Version IA)
+    #
+    #  Body  : { "message": "quelles sont les masters ?" }
+    #
+    #  Réponse JSON :
+    #  {
+    #    "success": true,
+    #    "version": "v2",
+    #    "response": "L'ENCG Marrakech propose...",
+    #    "context_used": true,
+    #    "context_count": 3,
+    #    "model": "gemini-1.5-flash"
+    #  }
     # ==========================================================
     @app.route("/api/chat/v2", methods=["POST"])
     def chat_v2():
-        """
-        Version 2 — RAG (Retrieval-Augmented Generation) + Gemini.
-        Body JSON : {"message": "..."}
-
-        Algorithme :
-          1. Recherche du contexte pertinent dans la BDD (RAG)
-          2. Construction d'un prompt enrichi avec le contexte
-          3. Appel à l'API Google Gemini
-          4. Retour de la réponse générée
-        """
         data    = request.get_json(silent=True) or {}
         message = data.get("message", "").strip()
 
@@ -206,47 +234,44 @@ def create_app(env: str = None) -> Flask:
         if not api_key:
             return jsonify({
                 "success": False,
-                "error":   "Clé API non configurée. Utilisez /api/chat/v1 à la place.",
+                "error":   "Clé API non configurée. Utilisez /api/chat/v1.",
             }), 503
 
         try:
-            # ── ÉTAPE 1 : RAG — Récupération du contexte ──────────
+            # ── ÉTAPE 1 : RAG — Récupération du contexte BDD ──────
             tokens       = [w.lower() for w in message.split() if len(w) > 2]
-            context_faqs = []
+            context_qas  = []
 
             if tokens:
                 conditions = [
                     or_(
-                        FAQ.question.ilike(f"%{t}%"),
-                        FAQ.reponse.ilike(f"%{t}%"),
-                        FAQ.keywords.ilike(f"%{t}%"),
+                        QA.question.ilike(f"%{t}%"),
+                        QA.response.ilike(f"%{t}%"),
                     )
                     for t in tokens[:5]
                 ]
-                context_faqs = FAQ.query.filter(or_(*conditions)).limit(5).all()
+                context_qas = QA.query.filter(or_(*conditions)).limit(5).all()
 
-            # ── ÉTAPE 2 : Construction du prompt ──────────────────
+            # ── ÉTAPE 2 : Construction du prompt enrichi ───────────
             system_prompt = (
                 "Tu es NORA, l'assistante virtuelle officielle de l'ENCG Marrakech "
                 "(École Nationale de Commerce et de Gestion). "
                 "Tu es professionnelle, chaleureuse et tu réponds toujours en français. "
-                "Tu aides les étudiants et futurs étudiants avec leurs questions sur l'école. "
-                "Si tu ne connais pas la réponse exacte, oriente vers le site officiel "
-                "www.encg-marrakech.ac.ma ou le secrétariat. "
+                "Tu aides les étudiants et futurs étudiants. "
+                "Si tu ne connais pas la réponse exacte, oriente vers "
+                "encg-marrakech.uca.ma ou le +212 524 33 70 26. "
                 "Sois concise mais complète."
             )
 
-            if context_faqs:
-                context_parts = [
-                    f"Q: {faq.question}\nR: {faq.reponse}"
-                    for faq in context_faqs
-                ]
-                context_text = "\n\n---\n\n".join(context_parts)
-                full_prompt  = (
+            if context_qas:
+                context_text = "\n\n---\n\n".join(
+                    f"Q: {qa.question}\nR: {qa.response}" for qa in context_qas
+                )
+                full_prompt = (
                     f"{system_prompt}\n\n"
-                    f"Informations de référence ENCG Marrakech :\n\n{context_text}\n\n"
+                    f"Informations ENCG Marrakech :\n\n{context_text}\n\n"
                     f"Question : {message}\n\n"
-                    f"Réponds de manière claire basée sur le contexte fourni."
+                    f"Réponds clairement en te basant sur le contexte fourni."
                 )
             else:
                 full_prompt = (
@@ -255,39 +280,29 @@ def create_app(env: str = None) -> Flask:
                     f"Réponds de manière générale sur l'ENCG Marrakech."
                 )
 
-            # ── ÉTAPE 3 : Appel Google Gemini ─────────────────────
+            # ── ÉTAPE 3 : Appel API Google Gemini ─────────────────
             import google.generativeai as genai
-
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel(
-                app.config.get("AI_MODEL", "gemini-1.5-flash")
-            )
-            response    = model.generate_content(
+            model    = genai.GenerativeModel(app.config.get("AI_MODEL", "gemini-1.5-flash"))
+            response = model.generate_content(
                 full_prompt,
-                generation_config=genai.GenerationConfig(
-                    temperature=0.7,
-                    max_output_tokens=1024,
-                ),
+                generation_config=genai.GenerationConfig(temperature=0.7, max_output_tokens=1024),
             )
-            ai_response = response.text.strip()
 
             return jsonify({
                 "success":       True,
                 "version":       "v2",
-                "response":      ai_response,
-                "context_used":  len(context_faqs) > 0,
-                "context_count": len(context_faqs),
+                "response":      response.text.strip(),
+                "context_used":  len(context_qas) > 0,
+                "context_count": len(context_qas),
                 "model":         app.config.get("AI_MODEL", "gemini-1.5-flash"),
             })
 
         except Exception as e:
             logger.error(f"Erreur chat_v2: {e}")
-            return jsonify({
-                "success": False,
-                "error":   f"Erreur IA : {str(e)}. Essayez /api/chat/v1.",
-            }), 500
+            return jsonify({"success": False, "error": f"Erreur IA : {str(e)}"}), 500
 
-    # ─── Gestionnaires d'erreurs ──────────────────────────────
+    # ─── Gestionnaires d'erreurs globaux ─────────────────────
     @app.errorhandler(404)
     def not_found(e):
         return jsonify({"success": False, "error": "Route non trouvée."}), 404
