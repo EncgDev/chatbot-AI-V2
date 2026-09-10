@@ -62,17 +62,17 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      target: builder             # <--- Ky-stopi f-Stage 1 (Node) w ma-ky'douzsh l-Nginx
+      target: builder             
     container_name: nora_frontend
     restart: unless-stopped
-    command: npm run dev -- --host 0.0.0.0  # <--- Ky'runni Vite Dev Server f-blasst Nginx
+    command: npm run dev -- --host 0.0.0.0  
     ports:
-      - "5173:5173"              # <--- Port dial Vite
+      - "5173:5173"              
     environment:
-      - VITE_USE_POLLING=true    # <--- Directive f-Windows/WSL2
+      - VITE_USE_POLLING=true    
     volumes:
-      - ./frontend:/app          # <--- Kysynchroniser l-code f-l-blassa
-      - /app/node_modules        # <--- Ma-ky-t'mhash node_modules
+      - ./frontend:/app          
+      - /app/node_modules        
     depends_on:
       - backend
     networks:
