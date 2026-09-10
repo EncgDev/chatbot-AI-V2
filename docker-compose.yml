@@ -14,7 +14,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nora_secret_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./database/encgm_training_dataset_inserts.sql:/docker-entrypoint-initdb.d/02-inserts.sql:ro
     ports:
       - "5432:5432"
     networks:
