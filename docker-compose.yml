@@ -62,12 +62,17 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        VITE_API_URL: http://localhost:5000
+      target: builder             # <--- Ky-stopi f-Stage 1 (Node) w ma-ky'douzsh l-Nginx
     container_name: nora_frontend
     restart: unless-stopped
+    command: npm run dev -- --host 0.0.0.0  # <--- Ky'runni Vite Dev Server f-blasst Nginx
     ports:
-      - "3000:80"
+      - "5173:5173"              # <--- Port dial Vite
+    environment:
+      - VITE_USE_POLLING=true    # <--- Directive f-Windows/WSL2
+    volumes:
+      - ./frontend:/app          # <--- Kysynchroniser l-code f-l-blassa
+      - /app/node_modules        # <--- Ma-ky-t'mhash node_modules
     depends_on:
       - backend
     networks:
