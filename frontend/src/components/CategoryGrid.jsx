@@ -4,10 +4,12 @@
  *
  * Consomme : GET /api/categories → [{ id, name, qa_count }]
  * Navigation : clic sur une carte → Écran 3 (ChatInterface) filtré sur category_id
+ *              clic sur "Parcourir" → Écran 4 (KnowledgeBase)
  */
 
 import React, { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { BookOpen } from 'lucide-react'
 import { getCategories } from '../api/chatApi'
 import Avatar3D from './Avatar3D'
 
@@ -93,8 +95,9 @@ function CategoryCard({ category, index, onClick }) {
  * @param {Object}   props
  * @param {Function} props.onSelectCategory — appelé avec l'objet catégorie sélectionné
  * @param {Function} props.onBack           — retour à WelcomeScreen (optionnel)
+ * @param {Function} props.onOpenKnowledge  — ouvre la page Base de connaissances
  */
-export default function CategoryGrid({ onSelectCategory, onBack }) {
+export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge }) {
   const [categories, setCategories] = useState([])
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState(null)
@@ -159,6 +162,29 @@ export default function CategoryGrid({ onSelectCategory, onBack }) {
           Choisissez une thématique
         </motion.h2>
 
+        {/* ── Bouton "Parcourir les informations" ──────────────────── */}
+        {!loading && !error && (
+          <motion.button
+            id="browse-knowledge-btn"
+            onClick={() => onOpenKnowledge?.()}
+            className="w-full flex items-center justify-center gap-2.5 mb-5
+                       px-5 py-3 rounded-xl3 border-2 border-encg-terracotta/30
+                       bg-encg-terracotta/5 hover:bg-encg-terracotta/10
+                       text-encg-terracotta font-sans text-sm font-semibold
+                       transition-all duration-200
+                       hover:border-encg-terracotta/50 hover:shadow-md
+                       focus:outline-none focus:ring-2 focus:ring-encg-terracotta/40"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.4, ease: 'easeOut' }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <BookOpen size={18} />
+            📚 Parcourir les informations
+          </motion.button>
+        )}
+
         {/* États de chargement / erreur / grille */}
         {loading ? (
           <div className="flex items-center justify-center py-24">
@@ -197,3 +223,4 @@ export default function CategoryGrid({ onSelectCategory, onBack }) {
     </motion.div>
   )
 }
+

@@ -2,10 +2,11 @@
  * App.jsx — Routeur principal de NORA
  * Auteur : Youssef (Frontend)
  *
- * Gestion des 3 écrans avec Framer Motion AnimatePresence :
- *   Écran 1 : WelcomeScreen  → Écran 2 au clic
- *   Écran 2 : CategoryGrid   → Écran 3 au choix de catégorie
- *   Écran 3 : ChatInterface  → Écran 2 au retour
+ * Gestion des 4 écrans avec Framer Motion AnimatePresence :
+ *   Écran 1 : WelcomeScreen   → Écran 2 au clic
+ *   Écran 2 : CategoryGrid    → Écran 3 au choix de catégorie / Écran 4 via "Parcourir"
+ *   Écran 3 : ChatInterface   → Écran 2 au retour
+ *   Écran 4 : KnowledgeBase   → Écran 2 au retour / Écran 3 via "Discuter"
  *
  * Pas de react-router : navigation par état local (parfait pour borne tactile SPA).
  */
@@ -15,12 +16,14 @@ import { AnimatePresence } from 'framer-motion'
 import WelcomeScreen  from './components/WelcomeScreen'
 import CategoryGrid   from './components/CategoryGrid'
 import ChatInterface  from './components/ChatInterface'
+import KnowledgeBase  from './components/KnowledgeBase'
 
 // Écrans possibles
 const SCREENS = {
-  WELCOME:   'welcome',
+  WELCOME:    'welcome',
   CATEGORIES: 'categories',
   CHAT:       'chat',
+  KNOWLEDGE:  'knowledge',
 }
 
 export default function App() {
@@ -47,6 +50,21 @@ export default function App() {
     setActiveCategory(null)
   }, [])
 
+  // ── Knowledge Base ───────────────────────────────────────────────────────
+  const handleOpenKnowledge = useCallback(() => {
+    setScreen(SCREENS.KNOWLEDGE)
+  }, [])
+
+  const handleKnowledgeToChat = useCallback((category) => {
+    setActiveCategory(category)
+    setScreen(SCREENS.CHAT)
+  }, [])
+
+  const handleBackFromKnowledge = useCallback(() => {
+    setScreen(SCREENS.CATEGORIES)
+    setActiveCategory(null)
+  }, [])
+
   return (
     <div className="w-full h-full overflow-hidden">
       <AnimatePresence mode="wait">
@@ -62,6 +80,7 @@ export default function App() {
             key="categories"
             onSelectCategory={handleSelectCategory}
             onBack={handleBackToWelcome}
+            onOpenKnowledge={handleOpenKnowledge}
           />
         )}
 
@@ -70,6 +89,14 @@ export default function App() {
             key="chat"
             category={activeCategory}
             onBack={handleBackToCategories}
+          />
+        )}
+
+        {screen === SCREENS.KNOWLEDGE && (
+          <KnowledgeBase
+            key="knowledge"
+            onBack={handleBackFromKnowledge}
+            onOpenChat={handleKnowledgeToChat}
           />
         )}
       </AnimatePresence>
