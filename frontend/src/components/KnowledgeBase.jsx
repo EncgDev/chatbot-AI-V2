@@ -103,12 +103,12 @@ function AccordionItem({ qa, index, isOpen, onToggle, prefersReduced }) {
 
 // ─── Composant principal ───────────────────────────────────────────────────────
 export default function KnowledgeBase({ onBack, onOpenChat }) {
-  const [categories, setCategories]     = useState([])
+  const [categories, setCategories] = useState([])
   const [activeCategory, setActiveCategory] = useState(null)
-  const [qas, setQas]                   = useState([])
-  const [loadingCats, setLoadingCats]   = useState(true)
-  const [loadingQas, setLoadingQas]     = useState(false)
-  const [errorCats, setErrorCats]       = useState(null)
+  const [qas, setQas] = useState([])
+  const [loadingCats, setLoadingCats] = useState(true)
+  const [loadingQas, setLoadingQas] = useState(false)
+  const [errorCats, setErrorCats] = useState(null)
   const [openAccordions, setOpenAccordions] = useState({})
   const tabsRef = useRef(null)
   const prefersReduced = usePrefersReducedMotion()
@@ -258,9 +258,9 @@ export default function KnowledgeBase({ onBack, onOpenChat }) {
                             whitespace-nowrap transition-all duration-200
                             focus:outline-none focus:ring-2 focus:ring-[#85181A]/40
                             ${isActive
-                              ? 'bg-[#85181A] text-white shadow-md'
-                              : 'bg-[#F8F5EE] text-[#505050] hover:bg-[#85181A]/10 hover:text-[#1A1A1A] border border-[#E8DDD0]'
-                            }`}
+                    ? 'bg-[#85181A] text-white shadow-md'
+                    : 'bg-[#F8F5EE] text-[#505050] hover:bg-[#85181A]/10 hover:text-[#1A1A1A] border border-[#E8DDD0]'
+                  }`}
                 initial={prefersReduced ? {} : { opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: cascadeDelay * i, duration: 0.3 }}
@@ -298,7 +298,7 @@ export default function KnowledgeBase({ onBack, onOpenChat }) {
               <div className="w-16 h-16 rounded-full bg-[#C85A32]/10 flex items-center justify-center">
                 <svg className="w-8 h-8 text-[#C85A32]" viewBox="0 0 24 24" fill="none">
                   <path d="M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                 </svg>
               </div>
               <p className="font-sans text-[#3D271D] font-medium">Service temporairement indisponible</p>

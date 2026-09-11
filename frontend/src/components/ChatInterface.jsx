@@ -106,14 +106,14 @@ function TypingIndicator() {
  * @param {Function} props.onBack      — retour vers CategoryGrid
  */
 export default function ChatInterface({ category, onBack }) {
-  const [messages,     setMessages]     = useState([])
-  const [input,        setInput]        = useState('')
-  const [version,      setVersion]      = useState('v1')
-  const [isLoading,    setIsLoading]    = useState(false)
-  const [suggestions,  setSuggestions]  = useState([])
-  const [isOnline,     setIsOnline]     = useState(true)
+  const [messages, setMessages] = useState([])
+  const [input, setInput] = useState('')
+  const [version, setVersion] = useState('v1')
+  const [isLoading, setIsLoading] = useState(false)
+  const [suggestions, setSuggestions] = useState([])
+  const [isOnline, setIsOnline] = useState(true)
   const messagesEndRef = useRef(null)
-  const inputRef       = useRef(null)
+  const inputRef = useRef(null)
 
   // ── Scroll automatique vers le bas ────────────────────────────────────────
   const scrollToBottom = useCallback(() => {
@@ -130,8 +130,8 @@ export default function ChatInterface({ category, onBack }) {
   // ── Message de bienvenue + chargement suggestions ────────────────────────
   useEffect(() => {
     const welcome = {
-      id:      Date.now(),
-      role:    'nora',
+      id: Date.now(),
+      role: 'nora',
       content: category
         ? `Bonjour ! Je suis NORA, votre assistante ENCG 😊\nJe suis prête à répondre à vos questions sur **${category.name}**.\n\nVoici quelques sujets fréquents — touchez ou saisissez votre question !`
         : 'Bonjour ! Je suis NORA, votre assistante ENCG 😊\nComment puis-je vous aider ?',
@@ -162,21 +162,21 @@ export default function ChatInterface({ category, onBack }) {
     setIsLoading(true)
 
     try {
-      const fn  = version === 'v2' ? sendChatV2 : sendChatV1
+      const fn = version === 'v2' ? sendChatV2 : sendChatV1
       const res = await fn(trimmed)
 
       const noraMsg = {
-        id:      Date.now() + 1,
-        role:    'nora',
+        id: Date.now() + 1,
+        role: 'nora',
         content: res.reply || 'Je n\'ai pas pu obtenir de réponse. Veuillez réessayer.',
-        source:  res.source,
+        source: res.source,
         version: res.version,
       }
       setMessages((prev) => [...prev, noraMsg])
     } catch (err) {
       const errMsg = {
-        id:      Date.now() + 1,
-        role:    'nora',
+        id: Date.now() + 1,
+        role: 'nora',
         content: `⚠️ Une erreur s'est produite : ${err.message}\n\nVérifiez votre connexion ou contactez l'ENCG :\n📞 +212 524 33 70 26`,
       }
       setMessages((prev) => [...prev, errMsg])
@@ -198,15 +198,15 @@ export default function ChatInterface({ category, onBack }) {
     setSuggestions([])
     // Re-déclenche le welcome
     const welcome = {
-      id:      Date.now(),
-      role:    'nora',
+      id: Date.now(),
+      role: 'nora',
       content: 'Conversation réinitialisée. Comment puis-je vous aider ?',
     }
     setMessages([welcome])
     if (category?.id) {
       getQAs(category.id).then((qas) => {
         setSuggestions(qas.slice(0, MAX_SUGGESTIONS).map((qa) => qa.question))
-      }).catch(() => {})
+      }).catch(() => { })
     }
   }
 

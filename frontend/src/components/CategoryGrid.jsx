@@ -205,11 +205,11 @@ function KioskCategoryCard({ category, index, onClick }) {
 
 // ─── Composant Principal ──────────────────────────────────────────────────────
 export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge, onOpenChat }) {
-  const [categories,   setCategories]   = useState([])
-  const [loading,      setLoading]      = useState(true)
-  const [error,        setError]        = useState(null)
-  const [searchQuery,  setSearchQuery]  = useState('')
-  const [currentTime,  setCurrentTime]  = useState(new Date())
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentTime, setCurrentTime] = useState(new Date())
 
   // Horloge en temps réel
   useEffect(() => {
@@ -447,7 +447,7 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
             {/* Boîte d'icône avec dégradé Bordeaux ENCG et halo */}
             <div className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-[#85181A] to-[#661012] text-white shadow-md group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
               <BookOpen className="w-5 h-5 group-hover:rotate-6 transition-transform duration-300" strokeWidth={2.2} />
-              
+
               {/* Point lumineux d'activité */}
               <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFB347] opacity-75" />

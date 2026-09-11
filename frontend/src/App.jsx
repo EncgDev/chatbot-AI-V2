@@ -13,22 +13,22 @@
 
 import React, { useState, useCallback } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import WelcomeScreen  from './components/WelcomeScreen'
-import CategoryGrid   from './components/CategoryGrid'
-import ChatInterface  from './components/ChatInterface'
-import KnowledgeBase  from './components/KnowledgeBase'
+import WelcomeScreen from './components/WelcomeScreen'
+import CategoryGrid from './components/CategoryGrid'
+import ChatInterface from './components/ChatInterface'
+import KnowledgeBase from './components/KnowledgeBase'
 
 // Écrans possibles
 const SCREENS = {
-  WELCOME:    'welcome',
+  WELCOME: 'welcome',
   CATEGORIES: 'categories',
-  CHAT:       'chat',
-  KNOWLEDGE:  'knowledge',
+  CHAT: 'chat',
+  KNOWLEDGE: 'knowledge',
 }
 
 export default function App() {
-  const [screen,          setScreen]          = useState(SCREENS.WELCOME)
-  const [activeCategory,  setActiveCategory]  = useState(null)
+  const [screen, setScreen] = useState(SCREENS.WELCOME)
+  const [activeCategory, setActiveCategory] = useState(null)
 
   // ── Transitions ──────────────────────────────────────────────────────────
   const handleStart = useCallback(() => {
