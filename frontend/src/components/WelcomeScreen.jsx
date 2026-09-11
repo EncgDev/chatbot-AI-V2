@@ -14,9 +14,53 @@
  *   - Invitation tactile « Touchez l'écran pour commencer »
  */
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Avatar3D from './Avatar3D'
+
+// ─── Animation Machine à Écrire (Typewriter Animation) ──────────────────────
+function TypewriterText({ text, speed = 60, delay = 350, pauseTime = 3500, loop = true }) {
+  const [displayedText, setDisplayedText] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [index, setIndex] = useState(0)
+
+  useEffect(() => {
+    let timer
+
+    if (!isDeleting && index < text.length) {
+      timer = setTimeout(() => {
+        setDisplayedText(text.slice(0, index + 1))
+        setIndex((prev) => prev + 1)
+      }, index === 0 ? delay : speed)
+    } else if (!isDeleting && index >= text.length) {
+      if (loop) {
+        timer = setTimeout(() => {
+          setIsDeleting(true)
+        }, pauseTime)
+      }
+    } else if (isDeleting && index > 0) {
+      timer = setTimeout(() => {
+        setDisplayedText(text.slice(0, index - 1))
+        setIndex((prev) => prev - 1)
+      }, speed * 0.6)
+    } else if (isDeleting && index === 0) {
+      setIsDeleting(false)
+    }
+
+    return () => clearTimeout(timer)
+  }, [index, isDeleting, text, speed, delay, loop, pauseTime])
+
+  return (
+    <span className="inline-block">
+      {displayedText}
+      <motion.span
+        className="inline-block w-[3px] h-[0.85em] bg-[#85181A] ml-1 align-middle rounded-xs"
+        animate={{ opacity: [1, 0, 1] }}
+        transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </span>
+  )
+}
 
 // ─── Palmes royales animées en arrière-plan ──────────────────────────────────
 function AnimatedPalmBackground() {
@@ -185,9 +229,14 @@ export default function WelcomeScreen({ onStart }) {
                   <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" title="En ligne" />
                 </div>
 
-                {/* Grand titre sérif */}
-                <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#85181A] leading-snug">
-                  Bienvenue à l'ENCG Marrakech !
+                {/* Grand titre sérif avec animation Machine à Écrire */}
+                <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#85181A] leading-snug min-h-[3.6rem] sm:min-h-[4.2rem] flex items-center">
+                  <TypewriterText
+                    text="Bienvenue à l'ENCG Marrakech !"
+                    speed={60}
+                    delay={400}
+                    pauseTime={3500}
+                  />
                 </h1>
 
                 {/* Sous-titre accueillant */}
