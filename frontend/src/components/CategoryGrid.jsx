@@ -421,8 +421,8 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
       {/* ── Bouton Flottant Fixe à gauche : Parcourir toutes les informations ── */}
       {onOpenKnowledge && (
         <motion.div
-          className="fixed bottom-3 left-3 sm:bottom-8 sm:left-8 z-40 max-w-[47vw] sm:max-w-none"
-          initial={{ opacity: 0, x: -40, y: 20 }}
+          className="fixed bottom-3 left-3 sm:bottom-7 sm:left-7 z-40 max-w-[48vw] sm:max-w-none"
+          initial={{ opacity: 0, x: -30, y: 20 }}
           animate={{ opacity: 1, x: 0, y: 0 }}
           transition={{
             type: 'spring',
@@ -434,40 +434,39 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
           <motion.button
             id="floating-knowledge-btn"
             onClick={onOpenKnowledge}
-            className="group relative flex items-center gap-2 sm:gap-3 px-3 py-2.5 sm:px-5 sm:py-3.5 rounded-full
-                       bg-white/95 backdrop-blur-xl border-2 border-[#85181A]/20
-                       shadow-[0_10px_26px_rgba(133,24,26,0.18)]
-                       hover:shadow-[0_18px_40px_rgba(133,24,26,0.28)]
-                       hover:border-[#85181A]/60
-                       transition-all duration-300 ease-out focus:outline-none focus:ring-4 focus:ring-[#85181A]/20 text-left"
-            whileHover={{ scale: 1.04, y: -2 }}
-            whileTap={{ scale: 0.96 }}
-            title="Parcourir toutes les informations"
+            className="group relative flex items-center gap-2.5 sm:gap-3.5 px-3 py-2 sm:px-5 sm:py-3 rounded-full
+                       bg-white border border-[#85181A]/15
+                       shadow-[0_8px_24px_rgba(0,0,0,0.08)]
+                       hover:shadow-[0_14px_32px_rgba(133,24,26,0.18)]
+                       hover:border-[#85181A]/40
+                       transition-all duration-300 ease-out focus:outline-none focus:ring-4 focus:ring-[#85181A]/15 text-left"
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            title="Toutes les informations"
           >
-            {/* Boîte d'icône avec dégradé Bordeaux ENCG et halo */}
-            <div className="relative flex items-center justify-center w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-[#85181A] to-[#661012] text-white shadow-md group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
-              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-6 transition-transform duration-300" strokeWidth={2.2} />
+            {/* Boîte d'icône ronde Bordeaux avec livre blanc & pastille dorée */}
+            <div className="relative flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#85181A] text-white shadow-sm flex-shrink-0">
+              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.2} />
 
-              {/* Point lumineux d'activité */}
+              {/* Point lumineux doré */}
               <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5 sm:h-3 sm:w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFB347] opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-[#C88A2E] border-2 border-white" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-[#D97706] ring-2 ring-white" />
               </span>
             </div>
 
-            {/* Textes descriptifs professionnels */}
-            <div className="flex flex-col pr-0.5 min-w-0">
-              <span className="font-sans font-bold text-xs sm:text-sm text-[#85181A] leading-tight group-hover:text-[#661012] transition-colors truncate">
-                Toutes les infos
+            {/* Textes descriptifs : Toutes les informations / Explorer la base & FAQ */}
+            <div className="flex flex-col min-w-0 pr-1">
+              <span className="font-sans font-bold text-xs sm:text-sm md:text-base text-[#85181A] leading-tight truncate">
+                Toutes les informations
               </span>
-              <span className="font-sans text-[10px] sm:text-xs text-[#505050] font-medium opacity-85 mt-0.5 hidden xs:inline sm:inline truncate">
-                Explorer la base
+              <span className="font-sans text-[10px] sm:text-xs text-[#666666] font-normal mt-0.5 hidden xs:inline sm:inline truncate">
+                Explorer la base & FAQ
               </span>
             </div>
 
-            {/* Flèche interactive animée */}
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#85181A]/5 group-hover:bg-[#85181A] group-hover:text-white text-[#85181A] flex items-center justify-center transition-all duration-200 ml-0.5 flex-shrink-0">
-              <ChevronRight size={14} strokeWidth={2.4} className="group-hover:translate-x-0.5 transition-transform duration-200" />
+            {/* Flèche circulaire droite */}
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#FAF7F2] text-[#85181A] flex items-center justify-center border border-[#85181A]/10 group-hover:bg-[#85181A] group-hover:text-white transition-all duration-200 ml-0.5 flex-shrink-0">
+              <ChevronRight size={16} strokeWidth={2.4} className="group-hover:translate-x-0.5 transition-transform duration-200" />
             </div>
           </motion.button>
         </motion.div>
@@ -475,8 +474,8 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
 
       {/* ── Bouton Flottant Fixe à droite : Discuter avec Nora / Chat ── */}
       <motion.div
-        className="fixed bottom-3 right-3 sm:bottom-8 sm:right-8 z-40 max-w-[47vw] sm:max-w-none"
-        initial={{ opacity: 0, x: 40, y: 20 }}
+        className="fixed bottom-3 right-3 sm:bottom-7 sm:right-7 z-40 max-w-[48vw] sm:max-w-none"
+        initial={{ opacity: 0, x: 30, y: 20 }}
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{
           type: 'spring',
@@ -491,44 +490,43 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
             if (onOpenChat) onOpenChat()
             else onSelectCategory?.(null)
           }}
-          className="group relative flex items-center gap-2 sm:gap-3 px-3 py-2.5 sm:px-5 sm:py-3.5 rounded-full
-                     bg-gradient-to-r from-[#85181A] to-[#661012] text-white
-                     border-2 border-[#A32427]/40
-                     shadow-[0_10px_26px_rgba(133,24,26,0.30)]
-                     hover:shadow-[0_18px_44px_rgba(133,24,26,0.42)]
-                     hover:border-white/40
+          className="group relative flex items-center gap-2.5 sm:gap-3.5 px-3 py-2 sm:px-5 sm:py-3 rounded-full
+                     bg-[#85181A] text-white
+                     border border-[#A32427]/40
+                     shadow-[0_8px_26px_rgba(133,24,26,0.32)]
+                     hover:shadow-[0_14px_34px_rgba(133,24,26,0.45)]
+                     hover:brightness-105
                      transition-all duration-300 ease-out focus:outline-none focus:ring-4 focus:ring-[#85181A]/30 text-left"
-          whileHover={{ scale: 1.04, y: -2 }}
-          whileTap={{ scale: 0.96 }}
-          title="Discuter directement avec Nora"
+          whileHover={{ scale: 1.03, y: -2 }}
+          whileTap={{ scale: 0.97 }}
+          title="Discuter avec Nora"
         >
-          {/* Avatar NORA mini avec pastille verte */}
-          <div className="relative flex items-center justify-center w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-white/15 border border-white/20 shadow-inner group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
+          {/* Avatar NORA avec fond translucide et halo vert */}
+          <div className="relative flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/15 border border-white/20 shadow-inner flex-shrink-0">
             <img
               src="/nora_robot_clean.png"
               alt="Nora"
-              className="w-5 h-5 sm:w-7 sm:h-7 object-contain drop-shadow-sm"
+              className="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-sm"
             />
-            {/* Pastille en ligne */}
+            {/* Pastille en ligne avec halo sombre */}
             <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5 sm:h-3 sm:w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-[#10B981] border-2 border-[#85181A]" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-[#10B981] ring-2 ring-[#85181A] ring-offset-1 ring-offset-black/30" />
             </span>
           </div>
 
-          {/* Textes descriptifs professionnels */}
-          <div className="flex flex-col pr-0.5 min-w-0">
-            <span className="font-sans font-bold text-xs sm:text-sm text-white leading-tight truncate">
-              Chat Nora
+          {/* Textes descriptifs : Discuter avec Nora / Posez votre question en direct */}
+          <div className="flex flex-col min-w-0 pr-1">
+            <span className="font-sans font-bold text-xs sm:text-sm md:text-base text-white leading-tight truncate">
+              Discuter avec Nora
             </span>
-            <span className="font-sans text-[10px] sm:text-xs text-[#FAF7F2]/80 font-medium mt-0.5 hidden xs:inline sm:inline truncate">
-              Poser direct
+            <span className="font-sans text-[10px] sm:text-xs text-white/80 font-normal mt-0.5 hidden xs:inline sm:inline truncate">
+              Posez votre question en direct
             </span>
           </div>
 
-          {/* Flèche interactive animée */}
-          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/15 group-hover:bg-white group-hover:text-[#85181A] text-white flex items-center justify-center transition-all duration-200 ml-0.5 flex-shrink-0">
-            <ChevronRight size={14} strokeWidth={2.4} className="group-hover:translate-x-0.5 transition-transform duration-200" />
+          {/* Bouton flèche rond blanc avec icône bordeaux */}
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white text-[#85181A] flex items-center justify-center shadow-sm group-hover:scale-105 transition-all duration-200 ml-0.5 flex-shrink-0">
+            <ChevronRight size={16} strokeWidth={2.4} className="group-hover:translate-x-0.5 transition-transform duration-200" />
           </div>
         </motion.button>
       </motion.div>
