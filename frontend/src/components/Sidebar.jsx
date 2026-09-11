@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import Avatar3D from './Avatar3D'
-import { ArrowLeft, Sparkles, HelpCircle, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Sparkles } from 'lucide-react'
 
 export default function Sidebar({ category, isOnline, onBack }) {
   return (
@@ -14,9 +14,8 @@ export default function Sidebar({ category, isOnline, onBack }) {
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
     >
-      {/* ── Haut : Bouton retour & Avatar 3D agrandi ── */}
-      <div className="flex flex-col items-center gap-5 w-full">
-        {/* Bouton retour avec label */}
+      {/* ── Haut : Bouton retour vers les catégories ── */}
+      <div className="w-full">
         <button
           id="sidebar-back-btn"
           onClick={onBack}
@@ -30,33 +29,34 @@ export default function Sidebar({ category, isOnline, onBack }) {
           <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
           <span>Changer de catégorie</span>
         </button>
+      </div>
 
-        {/* Avatar NORA 3D Agrandie */}
-        <div className="relative flex flex-col items-center mt-2">
-          <div className="w-36 h-36 md:w-44 md:h-44">
-            <Avatar3D interactive={true} className="w-full h-full" />
-          </div>
+      {/* ── Milieu : Robot NORA centré parfaitement ── */}
+      <div className="flex-1 flex flex-col items-center justify-center my-6 w-full text-center">
+        {/* Avatar NORA 3D centré et agrandi */}
+        <div className="w-40 h-40 md:w-48 md:h-48 lg:w-52 lg:h-52 flex items-center justify-center">
+          <Avatar3D interactive={true} className="w-full h-full" />
+        </div>
 
-          {/* Nom & Titre NORA */}
-          <div className="flex flex-col items-center text-center mt-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#85181A]/10 border border-[#85181A]/20">
-              <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-              <span className="font-sans text-[11px] font-bold text-[#85181A] uppercase tracking-wider">
-                NORA · ENCG
-              </span>
-            </div>
-            <h3 className="font-serif font-bold text-lg text-[#1A1A1A] mt-2">
-              Votre Assistante
-            </h3>
-            <p className="font-sans text-xs text-[#505050] opacity-80 max-w-[200px] mt-0.5">
-              Posez vos questions librement à Nora
-            </p>
+        {/* Nom & Titre NORA */}
+        <div className="flex flex-col items-center mt-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#85181A]/10 border border-[#85181A]/20">
+            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+            <span className="font-sans text-[11px] font-bold text-[#85181A] uppercase tracking-wider">
+              NORA · ENCG
+            </span>
           </div>
+          <h3 className="font-serif font-bold text-lg text-[#1A1A1A] mt-2">
+            Votre Assistante
+          </h3>
+          <p className="font-sans text-xs text-[#505050] opacity-80 max-w-[200px] mt-0.5">
+            Posez vos questions librement à Nora
+          </p>
         </div>
 
         {/* ── Carte de la catégorie active ── */}
         {category && (
-          <div className="w-full rounded-2xl bg-[#FAF7F2] border border-[#E8DDD0] p-4 text-left shadow-xs mt-2">
+          <div className="w-full rounded-2xl bg-[#FAF7F2] border border-[#E8DDD0] p-3.5 text-left shadow-xs mt-4">
             <div className="flex items-center gap-2 mb-1">
               <Sparkles size={14} className="text-[#85181A]" />
               <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-[#85181A]/80">
@@ -71,7 +71,7 @@ export default function Sidebar({ category, isOnline, onBack }) {
       </div>
 
       {/* ── Bas : Statut et informations ENCG ── */}
-      <div className="flex flex-col items-center gap-2 pt-6 border-t border-[#E8DDD0]/80 w-full text-center">
+      <div className="flex flex-col items-center gap-2 pt-4 border-t border-[#E8DDD0]/80 w-full text-center">
         <div className="flex items-center gap-2 text-xs font-sans font-medium text-[#505050]">
           <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-[#10B981]' : 'bg-[#EF4444]'}`} />
           <span>{isOnline ? 'Serveur connecté' : 'Mode hors ligne'}</span>
@@ -83,3 +83,4 @@ export default function Sidebar({ category, isOnline, onBack }) {
     </motion.aside>
   )
 }
+

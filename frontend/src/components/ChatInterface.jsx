@@ -14,15 +14,12 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, ArrowLeft, RotateCcw } from 'lucide-react'
+import { Send, ArrowLeft, RotateCcw, Sparkles } from 'lucide-react'
 import { getQAs, sendChatV1, sendChatV2, checkHealth } from '../api/chatApi'
 import Sidebar from './Sidebar'
 
-// ─── Constantes ───────────────────────────────────────────────────────────────
-const MAX_SUGGESTIONS = 4
-
 // ─── Bulle de message ─────────────────────────────────────────────────────────
-function MessageBubble({ msg, index }) {
+function MessageBubble({ msg }) {
   const isUser = msg.role === 'user'
 
   return (
@@ -32,11 +29,14 @@ function MessageBubble({ msg, index }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
     >
-      {/* Avatar bulle NORA */}
+      {/* Avatar bulle NORA avec icône robot */}
       {!isUser && (
-        <div className="w-8 h-8 rounded-full bg-[#85181A] flex items-center justify-center
-                        flex-shrink-0 text-white text-xs font-bold shadow-sm mt-1">
-          N
+        <div className="w-8 h-8 rounded-full overflow-hidden bg-[#FAF5EE] border border-[#E4D6C4] flex items-center justify-center flex-shrink-0 shadow-xs mt-1">
+          <img
+            src="/nora_robot_clean.png"
+            alt="Nora"
+            className="w-6 h-6 object-contain"
+          />
         </div>
       )}
 
@@ -133,18 +133,22 @@ export default function ChatInterface({ category, onBack }) {
       id: Date.now(),
       role: 'nora',
       content: category
-        ? `Bonjour ! Je suis NORA, votre assistante ENCG 😊\nJe suis prête à répondre à vos questions sur **${category.name}**.\n\nVoici quelques sujets fréquents — touchez ou saisissez votre question !`
-        : 'Bonjour ! Je suis NORA, votre assistante ENCG 😊\nComment puis-je vous aider ?',
+        ? `Bonjour ! Je suis NORA, votre assistante ENCG 😊\nJe suis prête à répondre à vos questions sur **${category.name}**.\n\nVoici les questions fréquentes disponibles pour cette catégorie — touchez ou saisissez votre question !`
+        : 'Bonjour ! Je suis NORA, votre assistante ENCG 😊\nComment puis-je vous aider ?\n\nVoici les questions fréquentes — touchez ou saisissez votre question !',
     }
     setMessages([welcome])
 
-    // Charger suggestions depuis l'API
+    // Charger TOUTES les questions depuis l'API pour la catégorie
     if (category?.id) {
       getQAs(category.id)
         .then((qas) => {
-          // Prend les N premières questions comme suggestions
-          // Champ exact du contrat : "question"
-          setSuggestions(qas.slice(0, MAX_SUGGESTIONS).map((qa) => qa.question))
+          setSuggestions(qas.map((qa) => qa.question).filter(Boolean))
+        })
+        .catch(() => setSuggestions([]))
+    } else {
+      getQAs()
+        .then((qas) => {
+          setSuggestions(qas.map((qa) => qa.question).filter(Boolean))
         })
         .catch(() => setSuggestions([]))
     }
@@ -196,7 +200,6 @@ export default function ChatInterface({ category, onBack }) {
   const handleReset = () => {
     setMessages([])
     setSuggestions([])
-    // Re-déclenche le welcome
     const welcome = {
       id: Date.now(),
       role: 'nora',
@@ -205,10 +208,20 @@ export default function ChatInterface({ category, onBack }) {
     setMessages([welcome])
     if (category?.id) {
       getQAs(category.id).then((qas) => {
-        setSuggestions(qas.slice(0, MAX_SUGGESTIONS).map((qa) => qa.question))
+        setSuggestions(qas.map((qa) => qa.question).filter(Boolean))
+      }).catch(() => { })
+    } else {
+      getQAs().then((qas) => {
+        setSuggestions(qas.map((qa) => qa.question).filter(Boolean))
       }).catch(() => { })
     }
   }
+
+  // ── Filtrage en direct des questions selon la saisie ────────────────────
+  const normalizedInput = input.trim().toLowerCase()
+  const filteredSuggestions = suggestions.filter((q) =>
+    normalizedInput === '' || q.toLowerCase().includes(normalizedInput)
+  )
 
   return (
     <motion.div
@@ -296,30 +309,42 @@ export default function ChatInterface({ category, onBack }) {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* ── Suggestions ──────────────────────────────────────────── */}
+        {/* ── Suggestions : Filtrées en direct par la saisie et toujours disponibles ──────────── */}
         <AnimatePresence>
-          {suggestions.length > 0 && messages.length <= 1 && !isLoading && (
+          {filteredSuggestions.length > 0 && !isLoading && (
             <motion.div
-              className="px-5 pb-3 flex flex-wrap gap-2"
+              className="px-5 pb-3 flex flex-col gap-2"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ duration: 0.25 }}
             >
-              {suggestions.map((q, i) => (
-                <button
-                  key={i}
-                  id={`suggestion-${i}`}
-                  onClick={() => handleSuggestion(q)}
-                  className="text-left px-3 py-2 rounded-xl bg-encg-white border border-encg-border
-                             text-encg-text-brown text-xs font-sans
-                             hover:border-encg-terracotta/50 hover:bg-encg-terracotta/5
-                             transition-colors duration-150 shadow-sm max-w-[48%] truncate"
-                  title={q}
-                >
-                  {q.length > 55 ? q.slice(0, 52) + '…' : q}
-                </button>
-              ))}
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles size={14} className="text-[#85181A]" />
+                  <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-[#85181A]/90">
+                    {normalizedInput
+                      ? `Questions correspondantes (${filteredSuggestions.length}) :`
+                      : `Questions disponibles (${filteredSuggestions.length}) :`}
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1 pb-1">
+                {filteredSuggestions.map((q, i) => (
+                  <button
+                    key={i}
+                    id={`suggestion-${i}`}
+                    onClick={() => handleSuggestion(q)}
+                    className="text-left px-3.5 py-2 rounded-xl bg-white border border-[#E8DDD0]
+                               text-[#1A1A1A] text-xs font-sans font-medium
+                               hover:border-[#85181A]/50 hover:bg-[#85181A]/5 hover:text-[#85181A]
+                               transition-all duration-150 shadow-xs hover:shadow-sm active:scale-98"
+                    title={q}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
