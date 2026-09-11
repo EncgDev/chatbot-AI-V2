@@ -179,19 +179,19 @@ export default function WelcomeScreen({ onStart }) {
                 {/* En-tête : Badge NORA */}
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-xl inline-block animate-bounce">👋</span>
-                  <span className="text-[11px] sm:text-xs font-sans uppercase tracking-widest font-bold text-[#C85A32]">
+                  <span className="text-[11px] sm:text-xs font-sans uppercase tracking-widest font-bold text-[#85181A]">
                     NORA vous accueille
                   </span>
                   <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" title="En ligne" />
                 </div>
 
                 {/* Grand titre sérif */}
-                <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#8A3A1C] leading-snug">
+                <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#85181A] leading-snug">
                   Bienvenue à l'ENCG Marrakech !
                 </h1>
 
                 {/* Sous-titre accueillant */}
-                <p className="font-sans text-xs sm:text-sm text-[#6E3C26] mt-1.5 font-normal opacity-85">
+                <p className="font-sans text-xs sm:text-sm text-[#505050] mt-1.5 font-normal opacity-85">
                   Votre assistante virtuelle interactive est à votre écoute.
                 </p>
 
@@ -222,7 +222,7 @@ export default function WelcomeScreen({ onStart }) {
               transition={{ delay: 0.50, duration: 0.7, ease: 'easeOut' }}
             >
               <img
-                src="/logo1.png"
+                src="/Logo ENCG couleur.png"
                 alt="École Nationale de Commerce et de Gestion Marrakech - Université Cadi Ayyad"
                 className="h-12 sm:h-14 md:h-16 w-auto object-contain drop-shadow-sm select-none pointer-events-none"
                 loading="eager"
@@ -237,7 +237,7 @@ export default function WelcomeScreen({ onStart }) {
               transition={{ delay: 0.65, duration: 0.7, ease: 'easeOut' }}
             >
               <motion.div
-                className="flex items-center gap-2.5 text-[#8A3A1C]"
+                className="flex items-center gap-2.5 text-[#85181A]"
                 animate={{
                   opacity: [0.80, 1, 0.80],
                   y: [0, -2, 0],
@@ -250,17 +250,17 @@ export default function WelcomeScreen({ onStart }) {
               >
                 {/* Anneau pulsant tactile */}
                 <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C85A32] opacity-60" />
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-[#C85A32]" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#85181A] opacity-60" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-[#85181A]" />
                 </span>
 
-                <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-normal tracking-normal text-[#8A3A1C]">
+                <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-normal tracking-normal text-[#85181A]">
                   Touchez l'écran pour commencer
                 </h2>
               </motion.div>
 
               {/* Sous-titre académique */}
-              <p className="font-sans text-xs sm:text-sm tracking-widest text-[#7B4634] opacity-75 font-normal">
+              <p className="font-sans text-xs sm:text-sm tracking-widest text-[#505050] opacity-75 font-normal">
                 École Nationale de Commerce et de Gestion · Marrakech
               </p>
             </motion.div>
@@ -274,7 +274,7 @@ export default function WelcomeScreen({ onStart }) {
               animate={{ opacity: 1 }}
             >
               <motion.div
-                className="rounded-full border-2 border-[#C85A32]"
+                className="rounded-full border-2 border-[#85181A]"
                 initial={{ width: 40, height: 40, opacity: 0.8 }}
                 animate={{ width: 600, height: 600, opacity: 0 }}
                 transition={{ duration: 0.65, ease: 'easeOut' }}

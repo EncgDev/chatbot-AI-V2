@@ -42,37 +42,37 @@ function getCategoryIcon(cat) {
   const name = (cat.name || '').toLowerCase()
 
   if (id === 1 || name.includes('encg marrakech')) {
-    return <Home className="w-5 h-5 sm:w-6 sm:h-6 text-[#7C3822]" strokeWidth={1.8} />
+    return <Home className="w-5 h-5 sm:w-6 sm:h-6 text-[#85181A]" strokeWidth={1.8} />
   }
   if (id === 2 || name.includes('parcours') || name.includes('organisation')) {
-    return <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-[#7C3822]" strokeWidth={1.8} />
+    return <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-[#C85A32]" strokeWidth={1.8} />
   }
   if (id === 3 || name.includes('orientation')) {
-    return <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-[#7C3822]" strokeWidth={1.8} />
+    return <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-[#85181A]" strokeWidth={1.8} />
   }
   if (id === 4 || name.includes('filières') && !name.includes('comparaison')) {
-    return <GitFork className="w-5 h-5 sm:w-6 sm:h-6 text-[#7C3822]" strokeWidth={1.8} />
+    return <GitFork className="w-5 h-5 sm:w-6 sm:h-6 text-[#C85A32]" strokeWidth={1.8} />
   }
   if (id === 5 || name.includes('compétences')) {
-    return <BarChart2 className="w-5 h-5 sm:w-6 sm:h-6 text-[#7C3822]" strokeWidth={1.8} />
+    return <BarChart2 className="w-5 h-5 sm:w-6 sm:h-6 text-[#85181A]" strokeWidth={1.8} />
   }
   if (id === 6 || name.includes('débouchés') || name.includes('professionnels')) {
-    return <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-[#7C3822]" strokeWidth={1.8} />
+    return <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-[#C85A32]" strokeWidth={1.8} />
   }
   if (id === 7 || name.includes('langue')) {
-    return <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-[#7C3822]" strokeWidth={1.8} />
+    return <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-[#85181A]" strokeWidth={1.8} />
   }
   if (id === 8 || name.includes('admiss') || name.includes('accès')) {
-    return <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-[#7C3822]" strokeWidth={1.8} />
+    return <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-[#C85A32]" strokeWidth={1.8} />
   }
   if (id === 9 || name.includes('comparaison')) {
-    return <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#7C3822]" strokeWidth={1.8} />
+    return <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#85181A]" strokeWidth={1.8} />
   }
   if (id === 10 || name.includes('intégrité')) {
-    return <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-[#7C3822]" strokeWidth={1.8} />
+    return <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-[#85181A]" strokeWidth={1.8} />
   }
 
-  return <School className="w-5 h-5 sm:w-6 sm:h-6 text-[#7C3822]" strokeWidth={1.8} />
+  return <School className="w-5 h-5 sm:w-6 sm:h-6 text-[#85181A]" strokeWidth={1.8} />
 }
 
 // ─── Formatage de la date en français ─────────────────────────────────────────
@@ -98,10 +98,10 @@ function getFormattedTime(now) {
 // ─── Arrière-plan fidèle à la maquette ─────────────────────────────────────────
 function KioskBackground() {
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
       {/* Fond crème chaleureux */}
       <div
-        className="absolute inset-0"
+        className="fixed inset-0"
         style={{
           backgroundColor: '#F8F3EA',
         }}
@@ -109,16 +109,16 @@ function KioskBackground() {
 
       {/* Trame de grille de points subtils */}
       <div
-        className="absolute inset-0 opacity-[0.22]"
+        className="fixed inset-0 opacity-[0.22]"
         style={{
-          backgroundImage: `radial-gradient(#8E4828 1.15px, transparent 1.15px)`,
+          backgroundImage: `radial-gradient(#85181A 1.15px, transparent 1.15px)`,
           backgroundSize: '28px 28px',
         }}
       />
 
       {/* Forme organique décorative en haut à droite (comme sur la maquette) */}
       <svg
-        className="absolute -top-12 -right-12 w-[340px] sm:w-[460px] h-[340px] sm:h-[460px] opacity-[0.45] pointer-events-none select-none"
+        className="fixed -top-12 -right-12 w-[340px] sm:w-[460px] h-[340px] sm:h-[460px] opacity-[0.45] pointer-events-none select-none"
         viewBox="0 0 400 400"
         fill="none"
       >
@@ -165,7 +165,7 @@ function KioskCategoryCard({ category, index, onClick }) {
       whileHover={{
         y: -4,
         scale: 1.015,
-        boxShadow: '0 16px 32px -10px rgba(110, 60, 30, 0.14)',
+        boxShadow: '0 16px 32px -10px rgba(133, 24, 26, 0.16)',
       }}
       whileTap={{ scale: 0.98 }}
     >
@@ -178,17 +178,17 @@ function KioskCategoryCard({ category, index, onClick }) {
 
       {/* Bas : Titre et compteur de questions */}
       <div className="mt-5 sm:mt-6">
-        <h3 className="font-sans font-bold text-base sm:text-lg text-[#2D1F17] leading-tight group-hover:text-[#7C3822] transition-colors">
+        <h3 className="font-sans font-bold text-base sm:text-lg text-[#1A1A1A] leading-tight group-hover:text-[#85181A] transition-colors">
           {category.name}
         </h3>
-        <p className="font-sans text-xs sm:text-sm text-[#7C5C4F]/85 mt-1 font-normal">
+        <p className="font-sans text-xs sm:text-sm text-[#505050]/85 mt-1 font-normal">
           {count} questions fréquentes
         </p>
       </div>
 
       {/* Bouton rond avec flèche chevron en bas à droite (comme sur la carte 2 de la maquette) */}
       <motion.div
-        className="absolute bottom-5 right-5 w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#7C3822] pointer-events-none"
+        className="absolute bottom-5 right-5 w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#85181A] pointer-events-none"
         initial={{ opacity: 0, scale: 0.7 }}
         animate={{
           opacity: isHovered ? 1 : 0,
@@ -204,7 +204,7 @@ function KioskCategoryCard({ category, index, onClick }) {
 }
 
 // ─── Composant Principal ──────────────────────────────────────────────────────
-export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge }) {
+export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge, onOpenChat }) {
   const [categories,   setCategories]   = useState([])
   const [loading,      setLoading]      = useState(true)
   const [error,        setError]        = useState(null)
@@ -258,11 +258,11 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
   }, [onSelectCategory])
 
   return (
-    <div className="relative w-full h-full min-h-screen flex flex-col overflow-x-hidden overflow-y-auto select-none">
+    <div className="relative w-full h-full min-h-screen bg-[#F8F3EA] flex flex-col overflow-x-hidden overflow-y-auto select-none">
       {/* Fond et motifs */}
       <KioskBackground />
 
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-10 py-8 flex flex-col flex-1">
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-10 pt-8 pb-20 flex flex-col flex-1">
 
         {/* ── 1. En-tête : ENCG Marrakech à gauche & Heure/Date à droite ── */}
         <header className="flex items-start justify-between gap-4 pb-6">
@@ -271,14 +271,14 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
             {onBack && (
               <button
                 onClick={onBack}
-                className="p-2 rounded-xl bg-white/70 hover:bg-white text-[#7C3822] transition-colors shadow-xs mr-1"
+                className="p-2 rounded-xl bg-white/70 hover:bg-white text-[#85181A] transition-colors shadow-xs mr-1"
                 title="Retour"
               >
                 <ArrowLeft size={18} />
               </button>
             )}
             <img
-              src="/logo1.png"
+              src="/Logo ENCG couleur.png"
               alt="ENCG Marrakech — Université Cadi Ayyad"
               className="h-12 sm:h-14 w-auto object-contain drop-shadow-sm select-none"
               loading="eager"
@@ -287,10 +287,10 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
 
           {/* Heure & Date en direct (typographie élégante comme sur la capture) */}
           <div className="text-right">
-            <p className="font-serif font-bold text-2xl sm:text-3xl text-[#7C3822] leading-none">
+            <p className="font-serif font-bold text-2xl sm:text-3xl text-[#85181A] leading-none">
               {getFormattedTime(currentTime)}
             </p>
-            <p className="font-sans text-xs sm:text-sm text-[#8A3A1C]/75 mt-1 font-medium">
+            <p className="font-sans text-xs sm:text-sm text-[#85181A]/75 mt-1 font-medium">
               {getFormattedDate(currentTime)}
             </p>
           </div>
@@ -306,7 +306,7 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
                 className="w-6 h-6 object-contain"
               />
             </div>
-            <span className="font-sans text-xs sm:text-sm font-semibold text-[#7C3822]">
+            <span className="font-sans text-xs sm:text-sm font-semibold text-[#85181A]">
               Nora vous accueille
             </span>
             <span className="w-2 h-2 rounded-full bg-[#10B981]" />
@@ -315,31 +315,31 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
 
         {/* ── 3. Titre Principal Sérif & Sous-titre ─────────────────────── */}
         <div className="py-2">
-          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#2D1F17] leading-[1.18] max-w-2xl">
+          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#1A1A1A] leading-[1.18] max-w-2xl">
             Bonjour, comment puis-je <br />
             vous aider aujourd'hui ?
           </h2>
-          <p className="font-sans text-sm sm:text-base text-[#6B4035] opacity-90 mt-3 font-normal max-w-xl">
+          <p className="font-sans text-sm sm:text-base text-[#505050] opacity-90 mt-3 font-normal max-w-xl">
             Choisissez une catégorie ou posez directement votre question à Nora.
           </p>
         </div>
 
         {/* ── 4. Barre de Recherche stylée ─────────────────────────────── */}
         <div className="pt-5 pb-6">
-          <div className="relative w-full rounded-2xl bg-white border border-[#E2D6C7] shadow-[0_2px_8px_rgba(61,39,29,0.04)] focus-within:border-[#C85A32]/60 focus-within:ring-2 focus-within:ring-[#C85A32]/25 transition-all">
+          <div className="relative w-full rounded-2xl bg-white border border-[#E2D6C7] shadow-[0_2px_8px_rgba(133,24,26,0.04)] focus-within:border-[#85181A]/70 focus-within:ring-2 focus-within:ring-[#85181A]/20 transition-all">
             <div className="flex items-center px-4 py-3 sm:py-3.5 gap-3">
-              <Search size={18} className="text-[#8A3A1C]/60 flex-shrink-0" />
+              <Search size={18} className="text-[#85181A]/70 flex-shrink-0" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher une information..."
-                className="w-full bg-transparent border-none outline-none font-sans text-sm sm:text-base text-[#2D1F17] placeholder-[#7C5C4F]/50"
+                className="w-full bg-transparent border-none outline-none font-sans text-sm sm:text-base text-[#1A1A1A] placeholder-[#85181A]/40"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="p-1 rounded-full text-[#8A3A1C]/60 hover:text-[#8A3A1C] hover:bg-black/5 transition-colors"
+                  className="p-1 rounded-full text-[#85181A]/60 hover:text-[#85181A] hover:bg-black/5 transition-colors"
                   title="Effacer"
                 >
                   <X size={16} />
@@ -349,21 +349,12 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
           </div>
         </div>
 
-        {/* ── Accès rapide Base de Connaissances (Optionnel / Discret) ─── */}
-        {onOpenKnowledge && (
-          <div className="flex items-center justify-between pb-3 text-xs text-[#7C5C4F]">
-            <span className="font-semibold uppercase tracking-wider text-[11px] text-[#7C3822]/80">
-              Catégories principales ({filteredCategories.length})
-            </span>
-            <button
-              onClick={onOpenKnowledge}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#7C3822] hover:underline"
-            >
-              <BookOpen size={14} />
-              <span>Parcourir toutes les informations</span>
-            </button>
-          </div>
-        )}
+        {/* ── Entête de section Catégories ────────────────────────────── */}
+        <div className="flex items-center justify-between pb-3 text-xs text-[#505050]">
+          <span className="font-semibold uppercase tracking-wider text-[11px] text-[#85181A]/80">
+            Catégories principales ({filteredCategories.length})
+          </span>
+        </div>
 
         {/* ── 5. Grille des Catégories en 3 colonnes ───────────────────── */}
         <main className="flex-1 pb-10">
@@ -401,13 +392,13 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
             </div>
           ) : filteredCategories.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center bg-white/60 rounded-[26px] border border-[#E4D6C4]/60">
-              <Search size={32} className="text-[#8A3A1C]/40 mb-2" />
-              <p className="font-sans font-semibold text-sm text-[#2D1F17]">
+              <Search size={32} className="text-[#85181A]/40 mb-2" />
+              <p className="font-sans font-semibold text-sm text-[#1A1A1A]">
                 Aucune catégorie trouvée pour « {searchQuery} »
               </p>
               <button
                 onClick={() => setSearchQuery('')}
-                className="mt-3 px-4 py-1.5 rounded-xl bg-[#7C3822]/10 text-[#7C3822] text-xs font-semibold hover:bg-[#7C3822]/20 transition-colors"
+                className="mt-3 px-4 py-1.5 rounded-xl bg-[#85181A]/10 text-[#85181A] text-xs font-semibold hover:bg-[#85181A]/20 transition-colors"
               >
                 Réinitialiser la recherche
               </button>
@@ -426,6 +417,121 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
           )}
         </main>
       </div>
+
+      {/* ── Bouton Flottant Fixe à gauche : Parcourir toutes les informations ── */}
+      {onOpenKnowledge && (
+        <motion.div
+          className="fixed bottom-6 left-6 sm:bottom-8 sm:left-8 z-40"
+          initial={{ opacity: 0, x: -40, y: 20 }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
+          transition={{
+            type: 'spring',
+            stiffness: 280,
+            damping: 22,
+            delay: 0.35,
+          }}
+        >
+          <motion.button
+            id="floating-knowledge-btn"
+            onClick={onOpenKnowledge}
+            className="group relative flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-3.5 rounded-full
+                       bg-white/95 backdrop-blur-xl border-2 border-[#85181A]/20
+                       shadow-[0_12px_32px_rgba(133,24,26,0.18)]
+                       hover:shadow-[0_18px_40px_rgba(133,24,26,0.28)]
+                       hover:border-[#85181A]/60
+                       transition-all duration-300 ease-out focus:outline-none focus:ring-4 focus:ring-[#85181A]/20 text-left"
+            whileHover={{ scale: 1.04, y: -2 }}
+            whileTap={{ scale: 0.96 }}
+            title="Parcourir toutes les informations"
+          >
+            {/* Boîte d'icône avec dégradé Bordeaux ENCG et halo */}
+            <div className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-[#85181A] to-[#661012] text-white shadow-md group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
+              <BookOpen className="w-5 h-5 group-hover:rotate-6 transition-transform duration-300" strokeWidth={2.2} />
+              
+              {/* Point lumineux d'activité */}
+              <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFB347] opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#C88A2E] border-2 border-white" />
+              </span>
+            </div>
+
+            {/* Textes descriptifs professionnels */}
+            <div className="flex flex-col pr-1">
+              <span className="font-sans font-bold text-xs sm:text-sm text-[#85181A] leading-tight group-hover:text-[#661012] transition-colors">
+                Toutes les informations
+              </span>
+              <span className="font-sans text-[10px] sm:text-xs text-[#505050] font-medium opacity-85 mt-0.5">
+                Explorer la base & FAQ
+              </span>
+            </div>
+
+            {/* Flèche interactive animée */}
+            <div className="w-7 h-7 rounded-full bg-[#85181A]/5 group-hover:bg-[#85181A] group-hover:text-white text-[#85181A] flex items-center justify-center transition-all duration-200 ml-1">
+              <ChevronRight size={16} strokeWidth={2.4} className="group-hover:translate-x-0.5 transition-transform duration-200" />
+            </div>
+          </motion.button>
+        </motion.div>
+      )}
+
+      {/* ── Bouton Flottant Fixe à droite : Discuter avec Nora / Chat ── */}
+      <motion.div
+        className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-40"
+        initial={{ opacity: 0, x: 40, y: 20 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{
+          type: 'spring',
+          stiffness: 280,
+          damping: 22,
+          delay: 0.35,
+        }}
+      >
+        <motion.button
+          id="floating-chat-btn"
+          onClick={() => {
+            if (onOpenChat) onOpenChat()
+            else onSelectCategory?.(null)
+          }}
+          className="group relative flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-3.5 rounded-full
+                     bg-gradient-to-r from-[#85181A] to-[#661012] text-white
+                     border-2 border-[#A32427]/40
+                     shadow-[0_12px_32px_rgba(133,24,26,0.30)]
+                     hover:shadow-[0_18px_44px_rgba(133,24,26,0.42)]
+                     hover:border-white/40
+                     transition-all duration-300 ease-out focus:outline-none focus:ring-4 focus:ring-[#85181A]/30 text-left"
+          whileHover={{ scale: 1.04, y: -2 }}
+          whileTap={{ scale: 0.96 }}
+          title="Discuter directement avec Nora"
+        >
+          {/* Avatar NORA mini avec pastille verte */}
+          <div className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/15 border border-white/20 shadow-inner group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
+            <img
+              src="/nora_robot_clean.png"
+              alt="Nora"
+              className="w-7 h-7 object-contain drop-shadow-sm"
+            />
+            {/* Pastille en ligne */}
+            <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#10B981] border-2 border-[#85181A]" />
+            </span>
+          </div>
+
+          {/* Textes descriptifs professionnels */}
+          <div className="flex flex-col pr-1">
+            <span className="font-sans font-bold text-xs sm:text-sm text-white leading-tight">
+              Discuter avec Nora
+            </span>
+            <span className="font-sans text-[10px] sm:text-xs text-[#FAF7F2]/80 font-medium mt-0.5">
+              Posez votre question en direct
+            </span>
+          </div>
+
+          {/* Flèche interactive animée */}
+          <div className="w-7 h-7 rounded-full bg-white/15 group-hover:bg-white group-hover:text-[#85181A] text-white flex items-center justify-center transition-all duration-200 ml-1">
+            <ChevronRight size={16} strokeWidth={2.4} className="group-hover:translate-x-0.5 transition-transform duration-200" />
+          </div>
+        </motion.button>
+      </motion.div>
     </div>
   )
 }

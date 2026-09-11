@@ -11,28 +11,40 @@ export default {
       // Extraite des assets réels (logo ENCG + splash screen)
       // ─────────────────────────────────────────────────────
       colors: {
-        // Fond principal — crème chaleureuse (splash screen)
-        'encg-cream-bg':          '#F5EFE0',
-        'encg-cream-light':       '#FAF7F0',
-        'encg-cream-dark':        '#EDE5D0',
+        // Rouge Bordeaux officiel ENCG (carré et calligraphie du logo)
+        'encg-bordeaux':          '#85181A',   // rouge bordeaux officiel
+        'encg-bordeaux-dark':     '#661012',   // bordeaux foncé
+        'encg-bordeaux-light':    '#A32427',   // bordeaux clair
+        'encg-bordeaux-50':       '#FDF2F2',   // bordeaux très subtil (fonds)
+        'encg-bordeaux-100':      '#FBE5E5',   // bordeaux pastel
 
-        // Terracotta — couleur principale du robot et des accents
+        // Terracotta / Ocre — Palmier UCA et robot NORA
         'encg-terracotta':        '#C85A32',   // terracotta moyen (logo palmier)
         'encg-terracotta-light':  '#E07A52',   // terracotta clair (reflets robot)
-        'encg-terracotta-dark':   '#9E3E1E',   // terracotta foncé (ombres robot)
+        'encg-terracotta-dark':   '#8A3A1C',   // terracotta foncé
         'encg-terracotta-xlight': '#F0A07A',   // terracotta très clair (highlights)
 
-        // Brun foncé — texte secondaire, navigation
-        'encg-text-brown':        '#3D271D',   // brun très foncé
+        // Noir Charbon & Gris du logo
+        'encg-charcoal':          '#1A1A1A',   // noir texte institutionnel
+        'encg-slate':             '#505050',   // gris Marrakech logo
+
+        // Fond principal — crème chaleureuse et élégante
+        'encg-cream-bg':          '#FAF7F2',
+        'encg-cream-light':       '#FDFBF7',
+        'encg-cream-dark':        '#EFE7D8',
+
+        // Brun foncé — texte et navigation
+        'encg-text-brown':        '#2D1F17',   // brun très foncé
         'encg-text-brown-light':  '#6B4035',   // brun moyen (sous-textes)
 
         // Neutres
         'encg-white':             '#FFFFFF',
         'encg-off-white':         '#FDF9F5',
         'encg-border':            '#E8DDD0',
-        'encg-shadow':            'rgba(61, 39, 29, 0.12)',
+        'encg-shadow':            'rgba(133, 24, 26, 0.10)',
 
-        // Accent lumineux (pastille antenne, indicateurs)
+        // Accent doré & lumineux
+        'encg-gold':              '#C88A2E',
         'encg-glow':              '#FFB347',
         'encg-glow-light':        '#FFD080',
       },

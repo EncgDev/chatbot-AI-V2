@@ -200,10 +200,10 @@ export default function KnowledgeBase({ onBack, onOpenChat }) {
             id="kb-back-btn"
             onClick={onBack}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl
-                       bg-[#F8F5EE] hover:bg-[#C85A32]/10 border border-[#E8DDD0]
-                       text-[#3D271D] text-sm font-sans font-medium
+                       bg-[#F8F5EE] hover:bg-[#85181A]/10 border border-[#E8DDD0]
+                       text-[#1A1A1A] text-sm font-sans font-medium
                        transition-colors duration-150
-                       focus:outline-none focus:ring-2 focus:ring-[#C85A32]/40"
+                       focus:outline-none focus:ring-2 focus:ring-[#85181A]/40"
             aria-label="Retour à l'accueil"
           >
             <ArrowLeft size={16} />
@@ -211,9 +211,9 @@ export default function KnowledgeBase({ onBack, onOpenChat }) {
           </button>
 
           {/* Badge titre */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#C85A32]/10 border border-[#C85A32]/20">
-            <BookOpen size={15} className="text-[#C85A32]" />
-            <span className="font-sans text-xs sm:text-sm font-semibold text-[#C85A32] tracking-wide">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#85181A]/10 border border-[#85181A]/20">
+            <BookOpen size={15} className="text-[#85181A]" />
+            <span className="font-sans text-xs sm:text-sm font-semibold text-[#85181A] tracking-wide">
               Base de connaissances
             </span>
           </div>
@@ -221,7 +221,7 @@ export default function KnowledgeBase({ onBack, onOpenChat }) {
 
         {/* Logo ENCG */}
         <img
-          src="/logo1.png"
+          src="/Logo ENCG couleur.png"
           alt="ENCG Marrakech"
           className="h-9 md:h-11 w-auto object-contain select-none pointer-events-none"
           loading="eager"
@@ -256,10 +256,10 @@ export default function KnowledgeBase({ onBack, onOpenChat }) {
                 onClick={() => handleCategoryClick(cat)}
                 className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-sans font-medium
                             whitespace-nowrap transition-all duration-200
-                            focus:outline-none focus:ring-2 focus:ring-[#C85A32]/40
+                            focus:outline-none focus:ring-2 focus:ring-[#85181A]/40
                             ${isActive
-                              ? 'bg-[#C85A32] text-white shadow-md'
-                              : 'bg-[#F8F5EE] text-[#6B4035] hover:bg-[#C85A32]/10 hover:text-[#3D271D] border border-[#E8DDD0]'
+                              ? 'bg-[#85181A] text-white shadow-md'
+                              : 'bg-[#F8F5EE] text-[#505050] hover:bg-[#85181A]/10 hover:text-[#1A1A1A] border border-[#E8DDD0]'
                             }`}
                 initial={prefersReduced ? {} : { opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}

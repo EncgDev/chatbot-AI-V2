@@ -1,92 +1,84 @@
-/**
- * Sidebar.jsx — Sidebar latérale du ChatInterface
- * Auteur : Youssef (Frontend)
- *
- * Affiche :
- *   - Avatar3D mini de NORA
- *   - Nom de la catégorie active
- *   - Bouton retour vers CategoryGrid
- *   - Badges de statut (V1/V2, connexion)
- *
- * Props :
- *   category    {Object}   — { id, name } catégorie active
- *   version     {'v1'|'v2'} — mode actif
- *   isOnline    {boolean}  — état de connexion au backend
- *   onBack      {Function} — retour vers la grille des catégories
- */
-
 import React from 'react'
 import { motion } from 'framer-motion'
 import Avatar3D from './Avatar3D'
-import { ArrowLeft, Wifi, WifiOff } from 'lucide-react'
+import { ArrowLeft, Sparkles, HelpCircle, ShieldCheck } from 'lucide-react'
 
-export default function Sidebar({ category, version, isOnline, onBack }) {
+export default function Sidebar({ category, isOnline, onBack }) {
   return (
     <motion.aside
       id="chat-sidebar"
-      className="flex flex-col items-center gap-6 py-8 px-4
-                 bg-encg-white/80 backdrop-blur-sm border-r border-encg-border
-                 w-24 md:w-32 flex-shrink-0"
+      className="hidden sm:flex flex-col justify-between p-6
+                 bg-white/85 backdrop-blur-md border-r border-[#E8DDD0]
+                 w-64 md:w-72 lg:w-80 flex-shrink-0 z-10 select-none overflow-y-auto"
       initial={{ x: -60, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
     >
-      {/* ── Bouton retour ─────────────────────────────────────────── */}
-      <button
-        id="sidebar-back-btn"
-        onClick={onBack}
-        className="w-10 h-10 rounded-full flex items-center justify-center
-                   bg-encg-cream-bg hover:bg-encg-terracotta/10 border border-encg-border
-                   text-encg-text-brown transition-colors duration-150"
-        aria-label="Retour aux catégories"
-        title="Retour"
-      >
-        <ArrowLeft size={18} />
-      </button>
+      {/* ── Haut : Bouton retour & Avatar 3D agrandi ── */}
+      <div className="flex flex-col items-center gap-5 w-full">
+        {/* Bouton retour avec label */}
+        <button
+          id="sidebar-back-btn"
+          onClick={onBack}
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl
+                     bg-[#FAF7F2] hover:bg-[#85181A]/10 border border-[#E8DDD0]
+                     text-[#85181A] font-sans text-xs sm:text-sm font-semibold transition-all duration-200
+                     shadow-xs hover:shadow-sm group"
+          aria-label="Retour aux catégories"
+          title="Retour aux catégories"
+        >
+          <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+          <span>Changer de catégorie</span>
+        </button>
 
-      {/* ── Avatar NORA mini ─────────────────────────────────────── */}
-      <div className="w-16 h-16 md:w-20 md:h-20">
-        <Avatar3D scale={0.9} cameraZ={3.2} className="w-full h-full" />
-      </div>
+        {/* Avatar NORA 3D Agrandie */}
+        <div className="relative flex flex-col items-center mt-2">
+          <div className="w-36 h-36 md:w-44 md:h-44">
+            <Avatar3D interactive={true} className="w-full h-full" />
+          </div>
 
-      {/* ── Nom NORA ─────────────────────────────────────────────── */}
-      <div className="flex flex-col items-center gap-1 text-center">
-        <span className="font-display text-sm font-semibold text-encg-text-brown">NORA</span>
-        <span className="font-sans text-[10px] text-encg-text-brown-light opacity-60 uppercase tracking-wider">
-          IA ENCG
-        </span>
-      </div>
-
-      {/* ── Catégorie active ─────────────────────────────────────── */}
-      {category && (
-        <div className="w-full rounded-xl bg-encg-terracotta/10 border border-encg-terracotta/20 p-2 text-center">
-          <p className="font-sans text-[10px] text-encg-terracotta font-semibold leading-tight">
-            {category.name}
-          </p>
+          {/* Nom & Titre NORA */}
+          <div className="flex flex-col items-center text-center mt-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#85181A]/10 border border-[#85181A]/20">
+              <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+              <span className="font-sans text-[11px] font-bold text-[#85181A] uppercase tracking-wider">
+                NORA · ENCG
+              </span>
+            </div>
+            <h3 className="font-serif font-bold text-lg text-[#1A1A1A] mt-2">
+              Votre Assistante
+            </h3>
+            <p className="font-sans text-xs text-[#505050] opacity-80 max-w-[200px] mt-0.5">
+              Posez vos questions librement à Nora
+            </p>
+          </div>
         </div>
-      )}
 
-      {/* ── Espaceur ─────────────────────────────────────────────── */}
-      <div className="flex-1" />
-
-      {/* ── Badge version ────────────────────────────────────────── */}
-      <div className={`px-2 py-1 rounded-full text-[10px] font-sans font-semibold
-        ${version === 'v2'
-          ? 'bg-encg-glow/20 text-encg-text-brown border border-encg-glow/40'
-          : 'bg-encg-terracotta/15 text-encg-terracotta border border-encg-terracotta/30'
-        }`}
-      >
-        {version === 'v2' ? '✨ IA' : '⚡ SQL'}
+        {/* ── Carte de la catégorie active ── */}
+        {category && (
+          <div className="w-full rounded-2xl bg-[#FAF7F2] border border-[#E8DDD0] p-4 text-left shadow-xs mt-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles size={14} className="text-[#85181A]" />
+              <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-[#85181A]/80">
+                Sujet sélectionné
+              </span>
+            </div>
+            <p className="font-sans text-xs sm:text-sm text-[#1A1A1A] font-bold leading-snug">
+              {category.name}
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* ── Indicateur connexion ─────────────────────────────────── */}
-      <div
-        className={`flex flex-col items-center gap-1 text-[10px] font-sans
-          ${isOnline ? 'text-green-600' : 'text-encg-terracotta'}`}
-        title={isOnline ? 'Connecté' : 'Hors ligne'}
-      >
-        {isOnline ? <Wifi size={14} /> : <WifiOff size={14} />}
-        <span className="opacity-70">{isOnline ? 'En ligne' : 'Hors ligne'}</span>
+      {/* ── Bas : Statut et informations ENCG ── */}
+      <div className="flex flex-col items-center gap-2 pt-6 border-t border-[#E8DDD0]/80 w-full text-center">
+        <div className="flex items-center gap-2 text-xs font-sans font-medium text-[#505050]">
+          <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-[#10B981]' : 'bg-[#EF4444]'}`} />
+          <span>{isOnline ? 'Serveur connecté' : 'Mode hors ligne'}</span>
+        </div>
+        <p className="font-sans text-[10px] text-[#505050] opacity-70">
+          ENCG Marrakech · Université Cadi Ayyad
+        </p>
       </div>
     </motion.aside>
   )

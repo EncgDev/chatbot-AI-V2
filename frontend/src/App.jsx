@@ -66,7 +66,7 @@ export default function App() {
   }, [])
 
   return (
-    <div className="w-full h-full overflow-hidden">
+    <div className="w-full h-full min-h-screen bg-[#F8F3EA] overflow-hidden">
       <AnimatePresence mode="wait">
         {screen === SCREENS.WELCOME && (
           <WelcomeScreen
@@ -81,6 +81,7 @@ export default function App() {
             onSelectCategory={handleSelectCategory}
             onBack={handleBackToWelcome}
             onOpenKnowledge={handleOpenKnowledge}
+            onOpenChat={() => handleSelectCategory(null)}
           />
         )}
 

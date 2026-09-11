@@ -17,7 +17,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Send, ArrowLeft, RotateCcw } from 'lucide-react'
 import { getQAs, sendChatV1, sendChatV2, checkHealth } from '../api/chatApi'
 import Sidebar from './Sidebar'
-import VersionToggle from './VersionToggle'
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 const MAX_SUGGESTIONS = 4
@@ -35,7 +34,7 @@ function MessageBubble({ msg, index }) {
     >
       {/* Avatar bulle NORA */}
       {!isUser && (
-        <div className="w-8 h-8 rounded-full terracotta-gradient flex items-center justify-center
+        <div className="w-8 h-8 rounded-full bg-[#85181A] flex items-center justify-center
                         flex-shrink-0 text-white text-xs font-bold shadow-sm mt-1">
           N
         </div>
@@ -46,50 +45,55 @@ function MessageBubble({ msg, index }) {
         <div
           className={`px-4 py-3 rounded-2xl text-sm font-sans leading-relaxed whitespace-pre-wrap
             ${isUser
-              ? 'terracotta-gradient text-white rounded-br-sm'
-              : 'bg-encg-white border border-encg-border text-encg-text-brown rounded-bl-sm shadow-card'
+              ? 'bg-[#85181A] text-white rounded-br-sm shadow-sm'
+              : 'bg-white border border-[#E8DDD0] text-[#1A1A1A] rounded-bl-sm shadow-card'
             }`}
         >
           {msg.content}
         </div>
-
-        {/* Source badge (V1/V2) */}
-        {!isUser && msg.source && (
-          <span className="text-[10px] font-sans text-encg-text-brown-light opacity-50 px-1">
-            {msg.version === 'v2' ? '✨ IA Gemini' : '⚡ Recherche rapide'}
-            {msg.source && msg.source !== 'sql' && msg.source !== 'v1' && ` · ${msg.source}`}
-          </span>
-        )}
       </div>
     </motion.div>
   )
 }
 
-// ─── Indicateur de frappe NORA ────────────────────────────────────────────────
+// ─── Indicateur d'attente NORA (Trois points dans la conversation) ────────────
 function TypingIndicator() {
   return (
     <motion.div
-      className="flex gap-3 items-center"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
-      transition={{ duration: 0.25 }}
+      className="flex gap-3 items-end"
+      initial={{ opacity: 0, y: 12, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
     >
-      <div className="w-8 h-8 rounded-full terracotta-gradient flex items-center justify-center
-                      flex-shrink-0 text-white text-xs font-bold shadow-sm">
-        N
+      {/* Avatar NORA */}
+      <div className="w-8 h-8 rounded-full overflow-hidden bg-[#FAF5EE] border border-[#E4D6C4] flex items-center justify-center flex-shrink-0 shadow-xs mb-0.5">
+        <img
+          src="/nora_robot_clean.png"
+          alt="Nora"
+          className="w-6 h-6 object-contain"
+        />
       </div>
-      <div className="bg-encg-white border border-encg-border rounded-2xl rounded-bl-sm px-4 py-3 shadow-card">
-        <div className="flex gap-1.5 items-center">
-          {[0, 0.15, 0.30].map((delay, i) => (
-            <motion.div
-              key={i}
-              className="w-2 h-2 rounded-full bg-encg-terracotta/60"
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 0.6, repeat: Infinity, delay, ease: 'easeInOut' }}
-            />
-          ))}
-        </div>
+
+      {/* Bulle contenant uniquement les 3 points rebondissants */}
+      <div className="bg-white border border-[#E8DDD0] rounded-2xl rounded-bl-sm px-4 py-3 shadow-card flex items-center gap-1.5 min-h-[38px]">
+        {[0, 1, 2].map((i) => (
+          <motion.span
+            key={i}
+            className="w-2.5 h-2.5 rounded-full bg-[#85181A]"
+            animate={{
+              y: [0, -6, 0],
+              opacity: [0.35, 1, 0.35],
+              scale: [0.8, 1.2, 0.8],
+            }}
+            transition={{
+              duration: 0.7,
+              repeat: Infinity,
+              delay: i * 0.16,
+              ease: 'easeInOut',
+            }}
+          />
+        ))}
       </div>
     </motion.div>
   )
@@ -226,47 +230,52 @@ export default function ChatInterface({ category, onBack }) {
       <div className="flex flex-col flex-1 overflow-hidden">
 
         {/* ── Header chat ──────────────────────────────────────────── */}
-        <header className="flex items-center justify-between px-5 py-4
-                           border-b border-encg-border bg-encg-white/90 backdrop-blur-xs">
+        <header className="flex items-center justify-between px-5 sm:px-7 py-3.5 sm:py-4
+                           border-b border-[#E8DDD0] bg-white/95 backdrop-blur-md z-20">
           <div className="flex items-center gap-3">
             <button
               id="chat-back-btn"
               onClick={onBack}
-              className="md:hidden w-9 h-9 rounded-full flex items-center justify-center
-                         hover:bg-encg-cream-bg text-encg-text-brown transition-colors"
+              className="w-9 h-9 rounded-xl flex items-center justify-center
+                         bg-[#FAF7F2] hover:bg-[#85181A]/10 text-[#85181A] border border-[#E8DDD0] transition-colors"
               aria-label="Retour"
+              title="Retour aux catégories"
             >
               <ArrowLeft size={18} />
             </button>
             <div>
-              <h2 className="font-display font-semibold text-encg-text-brown text-base">
-                {category?.name ?? 'NORA'}
+              <h2 className="font-display font-bold text-[#1A1A1A] text-base sm:text-lg leading-tight">
+                {category?.name ?? 'NORA — ENCG Marrakech'}
               </h2>
-              <p className="font-sans text-xs text-encg-text-brown-light opacity-60">
-                {isOnline ? '● En ligne' : '● Hors ligne'}
+              <p className="font-sans text-xs text-[#85181A] font-medium flex items-center gap-1.5 mt-0.5">
+                <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-[#10B981] animate-pulse' : 'bg-[#EF4444]'}`} />
+                {isOnline ? 'Nora est en ligne' : 'Hors ligne'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Toggle V1/V2 */}
-            <VersionToggle
-              version={version}
-              onChange={setVersion}
-              disabled={isLoading}
-            />
-
-            {/* Réinitialiser */}
+          <div className="flex items-center gap-3 sm:gap-5">
+            {/* Réinitialiser la conversation */}
             <button
               id="chat-reset-btn"
               onClick={handleReset}
-              className="w-9 h-9 rounded-full flex items-center justify-center
-                         hover:bg-encg-cream-bg text-encg-text-brown-light transition-colors"
+              className="px-3 py-1.5 rounded-xl flex items-center gap-1.5
+                         bg-[#FAF7F2] hover:bg-[#85181A]/10 text-[#505050] hover:text-[#85181A]
+                         border border-[#E8DDD0] text-xs font-semibold transition-all"
               title="Réinitialiser la conversation"
               aria-label="Réinitialiser"
             >
-              <RotateCcw size={16} />
+              <RotateCcw size={14} />
+              <span className="hidden sm:inline">Effacer</span>
             </button>
+
+            {/* Logo officiel ENCG couleur à droite */}
+            <img
+              src="/Logo ENCG couleur.png"
+              alt="ENCG Marrakech — Université Cadi Ayyad"
+              className="h-10 sm:h-12 w-auto object-contain drop-shadow-xs select-none pointer-events-none"
+              loading="eager"
+            />
           </div>
         </header>
 
@@ -348,21 +357,21 @@ export default function ChatInterface({ category, onBack }) {
               id="chat-send-btn"
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="w-11 h-11 rounded-xl terracotta-gradient flex items-center justify-center
+              className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#85181A] to-[#661012] flex items-center justify-center
                          text-white shadow-md disabled:opacity-40 disabled:cursor-not-allowed
                          hover:shadow-card-hover transition-all duration-150 flex-shrink-0"
               aria-label="Envoyer"
             >
               {isLoading
-                ? <div className="spinner w-5 h-5" />
+                ? <div className="spinner w-5 h-5 border-white border-t-transparent" />
                 : <Send size={17} />
               }
             </button>
           </form>
 
-          {/* Mention version active */}
-          <p className="mt-2 text-center text-[10px] font-sans text-encg-text-brown-light opacity-40">
-            Mode {version === 'v2' ? 'IA Gemini (peut être lent)' : 'recherche rapide SQL'}
+          {/* Note informative discrète */}
+          <p className="mt-2 text-center text-[10px] font-sans text-[#505050] opacity-60">
+            NORA · Assistante d'orientation et d'information interactive — ENCG Marrakech
           </p>
         </div>
       </div>

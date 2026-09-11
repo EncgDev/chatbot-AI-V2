@@ -9,13 +9,19 @@
 
 /* Variables CSS globales (mirror des tokens Tailwind) */
 :root {
-  --color-cream-bg:         #F5EFE0;
-  --color-cream-light:      #FAF7F0;
+  --color-bordeaux:         #85181A;
+  --color-bordeaux-dark:    #661012;
+  --color-bordeaux-light:   #A32427;
   --color-terracotta:       #C85A32;
   --color-terracotta-light: #E07A52;
-  --color-terracotta-dark:  #9E3E1E;
-  --color-text-brown:       #3D271D;
+  --color-terracotta-dark:  #8A3A1C;
+  --color-charcoal:         #1A1A1A;
+  --color-cream-bg:         #FAF7F2;
+  --color-cream-light:      #FDFBF7;
+  --color-cream-dark:       #EFE7D8;
+  --color-text-brown:       #2D1F17;
   --color-text-brown-light: #6B4035;
+  --color-gold:             #C88A2E;
   --color-glow:             #FFB347;
   --color-border:           #E8DDD0;
 
