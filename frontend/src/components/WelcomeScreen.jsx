@@ -197,14 +197,14 @@ export default function WelcomeScreen({ onStart }) {
           <AnimatedPalmBackground />
 
           {/* ── 2. Contenu centré (Bulle de parole + Robot côte-à-côte) ── */}
-          <div className="relative z-10 w-full max-w-4xl px-6 flex flex-col items-center justify-center text-center">
+          <div className="relative z-10 w-full max-w-4xl px-4 sm:px-6 py-4 flex flex-col items-center justify-center text-center my-auto">
 
             {/* ── Bloc combiné : Bulle de parole à gauche + Robot à droite ─ */}
-            <div className="relative flex flex-col md:flex-row items-center justify-center gap-2 md:gap-6 my-2">
+            <div className="relative flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 my-2 w-full">
 
-              {/* 💬 Bulle de parole agrandie (remplace la lampe selon votre flèche rouge) */}
+              {/* 💬 Bulle de parole agrandie */}
               <motion.div
-                className="relative z-20 bg-white/92 backdrop-blur-xl px-6 py-4 sm:px-8 sm:py-5 rounded-3xl shadow-[0_16px_36px_rgba(160,80,30,0.15)] border-2 border-[#EAD0BA] max-w-sm sm:max-w-md text-left"
+                className="relative z-20 bg-white/92 backdrop-blur-xl px-5 py-4 sm:px-8 sm:py-5 rounded-3xl shadow-[0_16px_36px_rgba(160,80,30,0.15)] border-2 border-[#EAD0BA] w-full max-w-sm sm:max-w-md text-left"
                 initial={{ opacity: 0, scale: 0.85, x: -20 }}
                 animate={{
                   opacity: 1,
@@ -230,7 +230,7 @@ export default function WelcomeScreen({ onStart }) {
                 </div>
 
                 {/* Grand titre sérif avec animation Machine à Écrire */}
-                <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#85181A] leading-snug min-h-[3.6rem] sm:min-h-[4.2rem] flex items-center">
+                <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold text-[#85181A] leading-snug min-h-[3.2rem] sm:min-h-[4.2rem] flex items-center">
                   <TypewriterText
                     text="Bienvenue à l'ENCG Marrakech !"
                     speed={60}
@@ -258,14 +258,14 @@ export default function WelcomeScreen({ onStart }) {
               >
                 <Avatar3D
                   interactive={true}
-                  className="w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96"
+                  className="w-56 h-56 xs:w-64 xs:h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-96 lg:h-96"
                 />
               </motion.div>
             </div>
 
             {/* ── 3. Logo officiel ENCG Marrakech (logo1.png transparent) ─ */}
             <motion.div
-              className="flex items-center justify-center mt-2 mb-6"
+              className="flex items-center justify-center mt-3 mb-5"
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.50, duration: 0.7, ease: 'easeOut' }}
@@ -273,20 +273,20 @@ export default function WelcomeScreen({ onStart }) {
               <img
                 src="/Logo ENCG couleur.png"
                 alt="École Nationale de Commerce et de Gestion Marrakech - Université Cadi Ayyad"
-                className="h-12 sm:h-14 md:h-16 w-auto object-contain drop-shadow-sm select-none pointer-events-none"
+                className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto object-contain drop-shadow-sm select-none pointer-events-none"
                 loading="eager"
               />
             </motion.div>
 
             {/* ── 4. Invitation tactile interactive "Touchez l'écran" ──── */}
             <motion.div
-              className="flex flex-col items-center gap-2.5"
+              className="flex flex-col items-center gap-2"
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.65, duration: 0.7, ease: 'easeOut' }}
             >
               <motion.div
-                className="flex items-center gap-2.5 text-[#85181A]"
+                className="flex items-center gap-2 text-[#85181A]"
                 animate={{
                   opacity: [0.80, 1, 0.80],
                   y: [0, -2, 0],
@@ -298,18 +298,18 @@ export default function WelcomeScreen({ onStart }) {
                 }}
               >
                 {/* Anneau pulsant tactile */}
-                <span className="relative flex h-3 w-3">
+                <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#85181A] opacity-60" />
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-[#85181A]" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-[#85181A]" />
                 </span>
 
-                <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-normal tracking-normal text-[#85181A]">
+                <h2 className="font-display text-xl sm:text-2xl md:text-3xl lg:text-4xl font-normal tracking-normal text-[#85181A]">
                   Touchez l'écran pour commencer
                 </h2>
               </motion.div>
 
               {/* Sous-titre académique */}
-              <p className="font-sans text-xs sm:text-sm tracking-widest text-[#505050] opacity-75 font-normal">
+              <p className="font-sans text-[11px] sm:text-xs md:text-sm tracking-wider text-[#505050] opacity-75 font-normal">
                 École Nationale de Commerce et de Gestion · Marrakech
               </p>
             </motion.div>

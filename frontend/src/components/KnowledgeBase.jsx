@@ -188,20 +188,20 @@ export default function KnowledgeBase({ onBack, onOpenChat }) {
           EN-TÊTE
           ═══════════════════════════════════════════════════════════════════ */}
       <motion.header
-        className="relative z-20 flex items-center justify-between px-5 md:px-8 py-4
+        className="relative z-20 flex items-center justify-between px-3.5 sm:px-6 md:px-8 py-2.5 sm:py-4
                    bg-white/90 backdrop-blur-sm border-b border-[#E8DDD0]"
         initial={prefersReduced ? {} : { y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Bouton retour */}
           <button
             id="kb-back-btn"
             onClick={onBack}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl
+            className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl
                        bg-[#F8F5EE] hover:bg-[#85181A]/10 border border-[#E8DDD0]
-                       text-[#1A1A1A] text-sm font-sans font-medium
+                       text-[#1A1A1A] text-xs sm:text-sm font-sans font-medium
                        transition-colors duration-150
                        focus:outline-none focus:ring-2 focus:ring-[#85181A]/40"
             aria-label="Retour à l'accueil"
@@ -211,8 +211,8 @@ export default function KnowledgeBase({ onBack, onOpenChat }) {
           </button>
 
           {/* Badge titre */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#85181A]/10 border border-[#85181A]/20">
-            <BookOpen size={15} className="text-[#85181A]" />
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-[#85181A]/10 border border-[#85181A]/20">
+            <BookOpen size={14} className="text-[#85181A]" />
             <span className="font-sans text-xs sm:text-sm font-semibold text-[#85181A] tracking-wide">
               Base de connaissances
             </span>
@@ -223,7 +223,7 @@ export default function KnowledgeBase({ onBack, onOpenChat }) {
         <img
           src="/Logo ENCG couleur.png"
           alt="ENCG Marrakech"
-          className="h-9 md:h-11 w-auto object-contain select-none pointer-events-none"
+          className="h-8 sm:h-10 md:h-11 w-auto object-contain select-none pointer-events-none"
           loading="eager"
         />
       </motion.header>
@@ -234,7 +234,7 @@ export default function KnowledgeBase({ onBack, onOpenChat }) {
       {!loadingCats && !errorCats && categories.length > 0 && (
         <motion.nav
           ref={tabsRef}
-          className="relative z-10 flex items-center gap-2 px-5 md:px-8 py-3
+          className="relative z-10 flex items-center gap-2 px-3.5 sm:px-6 md:px-8 py-2 sm:py-3
                      overflow-x-auto scrollbar-hide border-b border-[#E8DDD0]/60
                      bg-white/60 backdrop-blur-xs"
           role="tablist"

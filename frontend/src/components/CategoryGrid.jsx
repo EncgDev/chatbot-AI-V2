@@ -148,10 +148,10 @@ function KioskCategoryCard({ category, index, onClick }) {
       onClick={() => onClick(category)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="group relative text-left w-full rounded-[26px] p-6 sm:p-7
-                 flex flex-col justify-between min-h-[170px] sm:min-h-[190px]
+      className="group relative text-left w-full rounded-[22px] sm:rounded-[26px] p-5 sm:p-6 md:p-7
+                 flex flex-col justify-between min-h-[145px] sm:min-h-[170px] md:min-h-[185px]
                  transition-all duration-300 ease-out focus:outline-none
-                 border border-[#E4D6C4]/60"
+                 border border-[#E4D6C4]/60 shadow-[0_4px_16px_rgba(133,24,26,0.06)]"
       style={{
         backgroundColor: '#EFE4D4',
       }}
@@ -171,24 +171,24 @@ function KioskCategoryCard({ category, index, onClick }) {
     >
       {/* Haut : Boîte blanche carrée arrondie avec l'icône */}
       <div className="flex items-start justify-between w-full">
-        <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center group-hover:shadow transition-all duration-200">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white shadow-xs flex items-center justify-center group-hover:shadow transition-all duration-200">
           {icon}
         </div>
       </div>
 
       {/* Bas : Titre et compteur de questions */}
-      <div className="mt-5 sm:mt-6">
-        <h3 className="font-sans font-bold text-base sm:text-lg text-[#1A1A1A] leading-tight group-hover:text-[#85181A] transition-colors">
+      <div className="mt-3 sm:mt-5 pr-7 sm:pr-8">
+        <h3 className="font-sans font-bold text-sm sm:text-base md:text-lg text-[#1A1A1A] leading-tight group-hover:text-[#85181A] transition-colors">
           {category.name}
         </h3>
-        <p className="font-sans text-xs sm:text-sm text-[#505050]/85 mt-1 font-normal">
+        <p className="font-sans text-[11px] sm:text-xs md:text-sm text-[#505050]/85 mt-1 font-normal">
           {count} questions fréquentes
         </p>
       </div>
 
-      {/* Bouton rond avec flèche chevron en bas à droite (comme sur la carte 2 de la maquette) */}
+      {/* Bouton rond avec flèche chevron en bas à droite */}
       <motion.div
-        className="absolute bottom-5 right-5 w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#85181A] pointer-events-none"
+        className="absolute bottom-4 right-4 sm:bottom-5 sm:right-5 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white shadow-xs flex items-center justify-center text-[#85181A] pointer-events-none"
         initial={{ opacity: 0, scale: 0.7 }}
         animate={{
           opacity: isHovered ? 1 : 0,
@@ -262,12 +262,12 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
       {/* Fond et motifs */}
       <KioskBackground />
 
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-10 pt-8 pb-20 flex flex-col flex-1">
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-8 md:px-10 pt-5 sm:pt-8 pb-28 sm:pb-36 flex flex-col flex-1">
 
         {/* ── 1. En-tête : ENCG Marrakech à gauche & Heure/Date à droite ── */}
-        <header className="flex items-start justify-between gap-4 pb-6">
+        <header className="flex items-center justify-between gap-3 pb-4 sm:pb-6">
           {/* Logo / Titre Institutionnel */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {onBack && (
               <button
                 onClick={onBack}
@@ -280,30 +280,30 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
             <img
               src="/Logo ENCG couleur.png"
               alt="ENCG Marrakech — Université Cadi Ayyad"
-              className="h-12 sm:h-14 w-auto object-contain drop-shadow-sm select-none"
+              className="h-10 sm:h-12 md:h-14 w-auto object-contain drop-shadow-sm select-none"
               loading="eager"
             />
           </div>
 
-          {/* Heure & Date en direct (typographie élégante comme sur la capture) */}
-          <div className="text-right">
-            <p className="font-serif font-bold text-2xl sm:text-3xl text-[#85181A] leading-none">
+          {/* Heure & Date en direct */}
+          <div className="text-right flex-shrink-0">
+            <p className="font-serif font-bold text-xl sm:text-2xl md:text-3xl text-[#85181A] leading-none">
               {getFormattedTime(currentTime)}
             </p>
-            <p className="font-sans text-xs sm:text-sm text-[#85181A]/75 mt-1 font-medium">
+            <p className="font-sans text-[11px] sm:text-xs md:text-sm text-[#85181A]/75 mt-1 font-medium">
               {getFormattedDate(currentTime)}
             </p>
           </div>
         </header>
 
         {/* ── 2. Badge Nora vous accueille ────────────────────────────── */}
-        <div className="pt-2 pb-3">
-          <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/95 border border-[#E4D6C4] shadow-xs">
-            <div className="w-7 h-7 rounded-full overflow-hidden bg-[#FAF5EE] border border-[#E4D6C4] flex items-center justify-center flex-shrink-0">
+        <div className="pt-1 pb-2 sm:pt-2 sm:pb-3">
+          <div className="inline-flex items-center gap-2 sm:gap-2.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/95 border border-[#E4D6C4] shadow-xs">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full overflow-hidden bg-[#FAF5EE] border border-[#E4D6C4] flex items-center justify-center flex-shrink-0">
               <img
                 src="/nora_robot_clean.png"
                 alt="Nora Robot"
-                className="w-6 h-6 object-contain"
+                className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
               />
             </div>
             <span className="font-sans text-xs sm:text-sm font-semibold text-[#85181A]">
@@ -314,12 +314,12 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
         </div>
 
         {/* ── 3. Titre Principal Sérif & Sous-titre ─────────────────────── */}
-        <div className="py-2">
-          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#1A1A1A] leading-[1.18] max-w-2xl">
+        <div className="py-1 sm:py-2">
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#1A1A1A] leading-[1.18] max-w-2xl">
             Bonjour, comment puis-je <br />
             vous aider aujourd'hui ?
           </h2>
-          <p className="font-sans text-sm sm:text-base text-[#505050] opacity-90 mt-3 font-normal max-w-xl">
+          <p className="font-sans text-xs sm:text-sm md:text-base text-[#505050] opacity-90 mt-2 sm:mt-3 font-normal max-w-xl">
             Choisissez une catégorie ou posez directement votre question à Nora.
           </p>
         </div>
@@ -421,7 +421,7 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
       {/* ── Bouton Flottant Fixe à gauche : Parcourir toutes les informations ── */}
       {onOpenKnowledge && (
         <motion.div
-          className="fixed bottom-6 left-6 sm:bottom-8 sm:left-8 z-40"
+          className="fixed bottom-3 left-3 sm:bottom-8 sm:left-8 z-40 max-w-[47vw] sm:max-w-none"
           initial={{ opacity: 0, x: -40, y: 20 }}
           animate={{ opacity: 1, x: 0, y: 0 }}
           transition={{
@@ -434,9 +434,9 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
           <motion.button
             id="floating-knowledge-btn"
             onClick={onOpenKnowledge}
-            className="group relative flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-3.5 rounded-full
+            className="group relative flex items-center gap-2 sm:gap-3 px-3 py-2.5 sm:px-5 sm:py-3.5 rounded-full
                        bg-white/95 backdrop-blur-xl border-2 border-[#85181A]/20
-                       shadow-[0_12px_32px_rgba(133,24,26,0.18)]
+                       shadow-[0_10px_26px_rgba(133,24,26,0.18)]
                        hover:shadow-[0_18px_40px_rgba(133,24,26,0.28)]
                        hover:border-[#85181A]/60
                        transition-all duration-300 ease-out focus:outline-none focus:ring-4 focus:ring-[#85181A]/20 text-left"
@@ -445,29 +445,29 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
             title="Parcourir toutes les informations"
           >
             {/* Boîte d'icône avec dégradé Bordeaux ENCG et halo */}
-            <div className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-[#85181A] to-[#661012] text-white shadow-md group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
-              <BookOpen className="w-5 h-5 group-hover:rotate-6 transition-transform duration-300" strokeWidth={2.2} />
+            <div className="relative flex items-center justify-center w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-[#85181A] to-[#661012] text-white shadow-md group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
+              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-6 transition-transform duration-300" strokeWidth={2.2} />
 
               {/* Point lumineux d'activité */}
-              <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
+              <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5 sm:h-3 sm:w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFB347] opacity-75" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#C88A2E] border-2 border-white" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-[#C88A2E] border-2 border-white" />
               </span>
             </div>
 
             {/* Textes descriptifs professionnels */}
-            <div className="flex flex-col pr-1">
-              <span className="font-sans font-bold text-xs sm:text-sm text-[#85181A] leading-tight group-hover:text-[#661012] transition-colors">
-                Toutes les informations
+            <div className="flex flex-col pr-0.5 min-w-0">
+              <span className="font-sans font-bold text-xs sm:text-sm text-[#85181A] leading-tight group-hover:text-[#661012] transition-colors truncate">
+                Toutes les infos
               </span>
-              <span className="font-sans text-[10px] sm:text-xs text-[#505050] font-medium opacity-85 mt-0.5">
-                Explorer la base & FAQ
+              <span className="font-sans text-[10px] sm:text-xs text-[#505050] font-medium opacity-85 mt-0.5 hidden xs:inline sm:inline truncate">
+                Explorer la base
               </span>
             </div>
 
             {/* Flèche interactive animée */}
-            <div className="w-7 h-7 rounded-full bg-[#85181A]/5 group-hover:bg-[#85181A] group-hover:text-white text-[#85181A] flex items-center justify-center transition-all duration-200 ml-1">
-              <ChevronRight size={16} strokeWidth={2.4} className="group-hover:translate-x-0.5 transition-transform duration-200" />
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#85181A]/5 group-hover:bg-[#85181A] group-hover:text-white text-[#85181A] flex items-center justify-center transition-all duration-200 ml-0.5 flex-shrink-0">
+              <ChevronRight size={14} strokeWidth={2.4} className="group-hover:translate-x-0.5 transition-transform duration-200" />
             </div>
           </motion.button>
         </motion.div>
@@ -475,7 +475,7 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
 
       {/* ── Bouton Flottant Fixe à droite : Discuter avec Nora / Chat ── */}
       <motion.div
-        className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-40"
+        className="fixed bottom-3 right-3 sm:bottom-8 sm:right-8 z-40 max-w-[47vw] sm:max-w-none"
         initial={{ opacity: 0, x: 40, y: 20 }}
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{
@@ -491,10 +491,10 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
             if (onOpenChat) onOpenChat()
             else onSelectCategory?.(null)
           }}
-          className="group relative flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-3.5 rounded-full
+          className="group relative flex items-center gap-2 sm:gap-3 px-3 py-2.5 sm:px-5 sm:py-3.5 rounded-full
                      bg-gradient-to-r from-[#85181A] to-[#661012] text-white
                      border-2 border-[#A32427]/40
-                     shadow-[0_12px_32px_rgba(133,24,26,0.30)]
+                     shadow-[0_10px_26px_rgba(133,24,26,0.30)]
                      hover:shadow-[0_18px_44px_rgba(133,24,26,0.42)]
                      hover:border-white/40
                      transition-all duration-300 ease-out focus:outline-none focus:ring-4 focus:ring-[#85181A]/30 text-left"
@@ -503,32 +503,32 @@ export default function CategoryGrid({ onSelectCategory, onBack, onOpenKnowledge
           title="Discuter directement avec Nora"
         >
           {/* Avatar NORA mini avec pastille verte */}
-          <div className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/15 border border-white/20 shadow-inner group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
+          <div className="relative flex items-center justify-center w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-white/15 border border-white/20 shadow-inner group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
             <img
               src="/nora_robot_clean.png"
               alt="Nora"
-              className="w-7 h-7 object-contain drop-shadow-sm"
+              className="w-5 h-5 sm:w-7 sm:h-7 object-contain drop-shadow-sm"
             />
             {/* Pastille en ligne */}
-            <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
+            <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5 sm:h-3 sm:w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#10B981] border-2 border-[#85181A]" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-[#10B981] border-2 border-[#85181A]" />
             </span>
           </div>
 
           {/* Textes descriptifs professionnels */}
-          <div className="flex flex-col pr-1">
-            <span className="font-sans font-bold text-xs sm:text-sm text-white leading-tight">
-              Discuter avec Nora
+          <div className="flex flex-col pr-0.5 min-w-0">
+            <span className="font-sans font-bold text-xs sm:text-sm text-white leading-tight truncate">
+              Chat Nora
             </span>
-            <span className="font-sans text-[10px] sm:text-xs text-[#FAF7F2]/80 font-medium mt-0.5">
-              Posez votre question en direct
+            <span className="font-sans text-[10px] sm:text-xs text-[#FAF7F2]/80 font-medium mt-0.5 hidden xs:inline sm:inline truncate">
+              Poser direct
             </span>
           </div>
 
           {/* Flèche interactive animée */}
-          <div className="w-7 h-7 rounded-full bg-white/15 group-hover:bg-white group-hover:text-[#85181A] text-white flex items-center justify-center transition-all duration-200 ml-1">
-            <ChevronRight size={16} strokeWidth={2.4} className="group-hover:translate-x-0.5 transition-transform duration-200" />
+          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/15 group-hover:bg-white group-hover:text-[#85181A] text-white flex items-center justify-center transition-all duration-200 ml-0.5 flex-shrink-0">
+            <ChevronRight size={14} strokeWidth={2.4} className="group-hover:translate-x-0.5 transition-transform duration-200" />
           </div>
         </motion.button>
       </motion.div>

@@ -243,42 +243,42 @@ export default function ChatInterface({ category, onBack }) {
       <div className="flex flex-col flex-1 overflow-hidden">
 
         {/* ── Header chat ──────────────────────────────────────────── */}
-        <header className="flex items-center justify-between px-5 sm:px-7 py-3.5 sm:py-4
+        <header className="flex items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-4
                            border-b border-[#E8DDD0] bg-white/95 backdrop-blur-md z-20">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               id="chat-back-btn"
               onClick={onBack}
-              className="w-9 h-9 rounded-xl flex items-center justify-center
-                         bg-[#FAF7F2] hover:bg-[#85181A]/10 text-[#85181A] border border-[#E8DDD0] transition-colors"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center
+                         bg-[#FAF7F2] hover:bg-[#85181A]/10 text-[#85181A] border border-[#E8DDD0] transition-colors flex-shrink-0"
               aria-label="Retour"
               title="Retour aux catégories"
             >
-              <ArrowLeft size={18} />
+              <ArrowLeft size={16} />
             </button>
-            <div>
-              <h2 className="font-display font-bold text-[#1A1A1A] text-base sm:text-lg leading-tight">
+            <div className="min-w-0">
+              <h2 className="font-display font-bold text-[#1A1A1A] text-sm sm:text-lg leading-tight truncate">
                 {category?.name ?? 'NORA — ENCG Marrakech'}
               </h2>
-              <p className="font-sans text-xs text-[#85181A] font-medium flex items-center gap-1.5 mt-0.5">
-                <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-[#10B981] animate-pulse' : 'bg-[#EF4444]'}`} />
-                {isOnline ? 'Nora est en ligne' : 'Hors ligne'}
+              <p className="font-sans text-[11px] sm:text-xs text-[#85181A] font-medium flex items-center gap-1.5 mt-0.5">
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isOnline ? 'bg-[#10B981] animate-pulse' : 'bg-[#EF4444]'}`} />
+                <span>{isOnline ? 'Nora est en ligne' : 'Hors ligne'}</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-5">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             {/* Réinitialiser la conversation */}
             <button
               id="chat-reset-btn"
               onClick={handleReset}
-              className="px-3 py-1.5 rounded-xl flex items-center gap-1.5
+              className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl flex items-center gap-1.5
                          bg-[#FAF7F2] hover:bg-[#85181A]/10 text-[#505050] hover:text-[#85181A]
-                         border border-[#E8DDD0] text-xs font-semibold transition-all"
+                         border border-[#E8DDD0] text-[11px] sm:text-xs font-semibold transition-all"
               title="Réinitialiser la conversation"
               aria-label="Réinitialiser"
             >
-              <RotateCcw size={14} />
+              <RotateCcw size={13} />
               <span className="hidden sm:inline">Effacer</span>
             </button>
 
@@ -286,7 +286,7 @@ export default function ChatInterface({ category, onBack }) {
             <img
               src="/Logo ENCG couleur.png"
               alt="ENCG Marrakech — Université Cadi Ayyad"
-              className="h-10 sm:h-12 w-auto object-contain drop-shadow-xs select-none pointer-events-none"
+              className="h-8 sm:h-11 w-auto object-contain drop-shadow-xs select-none pointer-events-none"
               loading="eager"
             />
           </div>
@@ -295,7 +295,7 @@ export default function ChatInterface({ category, onBack }) {
         {/* ── Messages ─────────────────────────────────────────────── */}
         <div
           id="chat-messages"
-          className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-4"
+          className="flex-1 overflow-y-auto px-3.5 sm:px-6 py-3.5 sm:py-5 flex flex-col gap-3.5 sm:gap-4"
         >
           {messages.map((msg) => (
             <MessageBubble key={msg.id} msg={msg} />
@@ -313,7 +313,7 @@ export default function ChatInterface({ category, onBack }) {
         <AnimatePresence>
           {filteredSuggestions.length > 0 && !isLoading && (
             <motion.div
-              className="px-5 pb-3 flex flex-col gap-2"
+              className="px-3.5 sm:px-6 pb-2.5 sm:pb-3 flex flex-col gap-1.5 sm:gap-2"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
@@ -321,22 +321,22 @@ export default function ChatInterface({ category, onBack }) {
             >
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-1.5">
-                  <Sparkles size={14} className="text-[#85181A]" />
-                  <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-[#85181A]/90">
+                  <Sparkles size={13} className="text-[#85181A] flex-shrink-0" />
+                  <span className="font-sans text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#85181A]/90">
                     {normalizedInput
                       ? `Questions correspondantes (${filteredSuggestions.length}) :`
                       : `Questions disponibles (${filteredSuggestions.length}) :`}
                   </span>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1 pb-1">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-32 sm:max-h-40 overflow-y-auto pr-1 pb-1">
                 {filteredSuggestions.map((q, i) => (
                   <button
                     key={i}
                     id={`suggestion-${i}`}
                     onClick={() => handleSuggestion(q)}
-                    className="text-left px-3.5 py-2 rounded-xl bg-white border border-[#E8DDD0]
-                               text-[#1A1A1A] text-xs font-sans font-medium
+                    className="text-left px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-white border border-[#E8DDD0]
+                               text-[#1A1A1A] text-[11px] sm:text-xs font-sans font-medium
                                hover:border-[#85181A]/50 hover:bg-[#85181A]/5 hover:text-[#85181A]
                                transition-all duration-150 shadow-xs hover:shadow-sm active:scale-98"
                     title={q}
@@ -350,11 +350,11 @@ export default function ChatInterface({ category, onBack }) {
         </AnimatePresence>
 
         {/* ── Barre de saisie ──────────────────────────────────────── */}
-        <div className="px-5 pb-6 pt-3 border-t border-encg-border bg-encg-white/90 backdrop-blur-xs">
+        <div className="px-3.5 sm:px-6 pb-4 sm:pb-6 pt-2 sm:pt-3 border-t border-encg-border bg-encg-white/90 backdrop-blur-xs">
           <form
             id="chat-input-form"
             onSubmit={handleSubmit}
-            className="flex items-end gap-3"
+            className="flex items-end gap-2 sm:gap-3"
           >
             <textarea
               ref={inputRef}
@@ -371,10 +371,10 @@ export default function ChatInterface({ category, onBack }) {
               rows={1}
               disabled={isLoading}
               className="flex-1 resize-none rounded-xl border border-encg-border bg-encg-cream-light
-                         px-4 py-3 text-sm font-sans text-encg-text-brown placeholder:text-encg-text-brown-light/50
+                         px-3.5 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-sans text-encg-text-brown placeholder:text-encg-text-brown-light/50
                          focus:outline-none focus:ring-2 focus:ring-encg-terracotta/40 focus:border-encg-terracotta/50
                          disabled:opacity-50 disabled:cursor-not-allowed
-                         transition-colors duration-150 max-h-32 overflow-auto"
+                         transition-colors duration-150 max-h-28 sm:max-h-32 overflow-auto"
               style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
               aria-label="Message à NORA"
             />
@@ -382,20 +382,20 @@ export default function ChatInterface({ category, onBack }) {
               id="chat-send-btn"
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#85181A] to-[#661012] flex items-center justify-center
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#85181A] to-[#661012] flex items-center justify-center
                          text-white shadow-md disabled:opacity-40 disabled:cursor-not-allowed
                          hover:shadow-card-hover transition-all duration-150 flex-shrink-0"
               aria-label="Envoyer"
             >
               {isLoading
-                ? <div className="spinner w-5 h-5 border-white border-t-transparent" />
-                : <Send size={17} />
+                ? <div className="spinner w-4 h-4 sm:w-5 sm:h-5 border-white border-t-transparent" />
+                : <Send size={16} />
               }
             </button>
           </form>
 
           {/* Note informative discrète */}
-          <p className="mt-2 text-center text-[10px] font-sans text-[#505050] opacity-60">
+          <p className="mt-1.5 sm:mt-2 text-center text-[9px] sm:text-[10px] font-sans text-[#505050] opacity-60">
             NORA · Assistante d'orientation et d'information interactive — ENCG Marrakech
           </p>
         </div>
@@ -403,3 +403,4 @@ export default function ChatInterface({ category, onBack }) {
     </motion.div>
   )
 }
+
