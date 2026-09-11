@@ -11,7 +11,7 @@
  * Pas de react-router : navigation par état local (parfait pour borne tactile SPA).
  */
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import WelcomeScreen from './components/WelcomeScreen'
 import CategoryGrid from './components/CategoryGrid'
@@ -25,6 +25,9 @@ const SCREENS = {
   CHAT: 'chat',
   KNOWLEDGE: 'knowledge',
 }
+
+// Durée d'inactivité avant redirection automatique vers l'accueil (30 secondes)
+const INACTIVITY_TIMEOUT_MS = 30 * 1000
 
 export default function App() {
   const [screen, setScreen] = useState(SCREENS.WELCOME)
@@ -64,6 +67,49 @@ export default function App() {
     setScreen(SCREENS.CATEGORIES)
     setActiveCategory(null)
   }, [])
+
+  // ── ⏱️ Redirection automatique vers l'accueil après 30s d'inactivité ──────
+  useEffect(() => {
+    if (screen === SCREENS.WELCOME) return
+
+    let idleTimer = null
+
+    const resetIdleTimer = () => {
+      if (idleTimer) clearTimeout(idleTimer)
+      idleTimer = setTimeout(() => {
+        handleBackToWelcome()
+      }, INACTIVITY_TIMEOUT_MS)
+    }
+
+    // Événements d'interaction tactile, souris et clavier
+    const userEvents = [
+      'touchstart',
+      'touchend',
+      'touchmove',
+      'pointerdown',
+      'pointermove',
+      'mousemove',
+      'mousedown',
+      'keydown',
+      'scroll',
+      'click',
+    ]
+
+    userEvents.forEach((evt) => {
+      window.addEventListener(evt, resetIdleTimer, { passive: true })
+    })
+
+    // Lance le décompte initial de 30 secondes
+    resetIdleTimer()
+
+    return () => {
+      if (idleTimer) clearTimeout(idleTimer)
+      userEvents.forEach((evt) => {
+        window.removeEventListener(evt, resetIdleTimer)
+      })
+    }
+  }, [screen, handleBackToWelcome])
+
 
   return (
     <div className="w-full h-full min-h-screen bg-[#F8F3EA] overflow-hidden">
