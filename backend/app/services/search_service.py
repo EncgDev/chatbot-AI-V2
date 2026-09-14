@@ -297,8 +297,8 @@ class SearchService:
         return (
             "Je suis désolée, je n'ai pas trouvé de réponse exacte à votre question dans la base de données de l'ENCG.\n\n"
             "Vous pouvez contacter directement l'ENCG Marrakech :\n"
-            "📞 Téléphone : +212 524 33 70 26\n"
-            "📧 Email : contact@encg-marrakech.uca.ma\n"
-            "🌐 Site web : http://www.encg-marrakech.uca.ma\n"
+            "📞 Téléphone : +212 5 24 30 46\n"
+            "📧 Email : encg@uca.ac.ma\n"
+            "🌐 Site web : https://www.uca.ma/encg/fr\n"
             "📍 Adresse : Avenue Allal El Fassi, B.P. 3720 Amerchich, Marrakech"
         )
