@@ -353,36 +353,41 @@ export default function ChatInterface({ category, onBack }) {
           </div>
         </header>
 
-        {/* ── Suggestions : PLACÉES EN HAUT DU CHAT ────────────────────────── */}
+        {/* ── Suggestions : PLACÉES EN HAUT DU CHAT AVEC HAUTEUR AUGMENTÉE ────────────────── */}
         <AnimatePresence>
           {filteredSuggestions.length > 0 && !isLoading && (
             <motion.div
-              className="px-3.5 sm:px-6 py-2.5 bg-white/70 border-b border-[#E8DDD0]/80 backdrop-blur-xs flex flex-col gap-1.5 z-10 flex-shrink-0"
+              className="px-3.5 sm:px-6 py-3.5 sm:py-4 bg-white/80 border-b border-[#E8DDD0] backdrop-blur-md flex flex-col gap-2.5 z-10 flex-shrink-0 shadow-xs"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.25 }}
             >
               <div className="flex items-center justify-between px-0.5">
-                <div className="flex items-center gap-1.5">
-                  <Sparkles size={13} className="text-[#85181A] flex-shrink-0" />
-                  <span className="font-sans text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#85181A]/90">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-lg bg-[#85181A]/10 text-[#85181A] flex items-center justify-center">
+                    <Sparkles size={13} />
+                  </div>
+                  <span className="font-sans text-xs sm:text-sm font-bold uppercase tracking-wider text-[#85181A]">
                     {normalizedInput
-                      ? `Questions correspondantes (${filteredSuggestions.length}) :`
-                      : `Questions suggérées (${filteredSuggestions.length}) :`}
+                      ? `Questions correspondantes (${filteredSuggestions.length})`
+                      : `Questions fréquentes & disponibles (${filteredSuggestions.length})`}
                   </span>
                 </div>
+                <span className="text-[11px] text-[#505050] font-sans hidden sm:inline opacity-75">
+                  Touchez une question pour l'envoyer
+                </span>
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+              <div className="flex flex-wrap gap-2 max-h-40 sm:max-h-52 md:max-h-60 overflow-y-auto pr-1 pb-1 scrollbar-thin">
                 {filteredSuggestions.map((q, i) => (
                   <button
                     key={i}
                     id={`suggestion-${i}`}
                     onClick={() => handleSuggestion(q)}
-                    className="flex-shrink-0 whitespace-nowrap px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full bg-white border border-[#E8DDD0]
-                               text-[#1A1A1A] text-[11px] sm:text-xs font-sans font-medium
-                               hover:border-[#85181A]/60 hover:bg-[#85181A] hover:text-white
-                               transition-all duration-150 shadow-xs hover:shadow-sm active:scale-95"
+                    className="text-left px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white border border-[#E8DDD0]
+                               text-[#1A1A1A] text-xs sm:text-sm font-sans font-medium
+                               hover:border-[#85181A] hover:bg-[#85181A] hover:text-white
+                               transition-all duration-150 shadow-xs hover:shadow-sm active:scale-97 leading-relaxed"
                     title={q}
                   >
                     {q}
