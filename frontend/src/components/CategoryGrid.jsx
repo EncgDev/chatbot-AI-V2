@@ -181,9 +181,7 @@ function KioskCategoryCard({ category, index, onClick }) {
         <h3 className="font-sans font-bold text-sm sm:text-base md:text-lg text-[#1A1A1A] leading-tight group-hover:text-[#85181A] transition-colors">
           {category.name}
         </h3>
-        <p className="font-sans text-[11px] sm:text-xs md:text-sm text-[#505050]/85 mt-1 font-normal">
-          {count} questions fréquentes
-        </p>
+        
       </div>
 
       {/* Bouton rond avec flèche chevron en bas à droite */}

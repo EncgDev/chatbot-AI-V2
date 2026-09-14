@@ -14,13 +14,17 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, ArrowLeft, RotateCcw, Sparkles } from 'lucide-react'
+import { Send, ArrowLeft, RotateCcw, Sparkles, Phone, MapPin, Mail, ExternalLink } from 'lucide-react'
 import { getQAs, sendChatV1, sendChatV2, checkHealth } from '../api/chatApi'
 import Sidebar from './Sidebar'
 
 // ─── Bulle de message ─────────────────────────────────────────────────────────
 function MessageBubble({ msg }) {
   const isUser = msg.role === 'user'
+
+  // Détection si le message contient des informations de contact / fallback
+  const isContactCard = msg.showContactCard || 
+    (typeof msg.content === 'string' && (msg.content.includes('05 24 30 46 92') || msg.content.includes('encg@uca.ac.ma')))
 
   return (
     <motion.div
@@ -40,7 +44,7 @@ function MessageBubble({ msg }) {
         </div>
       )}
 
-      <div className={`max-w-[75%] flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
+      <div className={`max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 ${isUser ? 'items-end' : 'items-start'}`}>
         {/* Contenu */}
         <div
           className={`px-4 py-3 rounded-2xl text-sm font-sans leading-relaxed whitespace-pre-wrap
@@ -50,6 +54,53 @@ function MessageBubble({ msg }) {
             }`}
         >
           {msg.content}
+
+          {/* Carte interactive des coordonnées ENCG en cas de question sans réponse ou erreur */}
+          {isContactCard && (
+            <div className="mt-3 pt-3 border-t border-[#E8DDD0] flex flex-col gap-2 bg-[#FAF7F2] p-3 rounded-xl">
+              <span className="font-sans font-bold text-xs text-[#85181A] uppercase tracking-wider">
+                Contact & Administration ENCG Marrakech
+              </span>
+
+              {/* Téléphone */}
+              <a
+                href="tel:0524304692"
+                className="flex items-center gap-2 text-xs font-sans text-[#1A1A1A] hover:text-[#85181A] transition-colors p-1.5 rounded-lg hover:bg-white"
+              >
+                <div className="w-6 h-6 rounded-full bg-[#85181A]/10 text-[#85181A] flex items-center justify-center flex-shrink-0">
+                  <Phone size={13} />
+                </div>
+                <span><strong>Tél :</strong> 05 24 30 46 92</span>
+              </a>
+
+              {/* Email */}
+              <a
+                href="mailto:encg@uca.ac.ma"
+                className="flex items-center gap-2 text-xs font-sans text-[#1A1A1A] hover:text-[#85181A] transition-colors p-1.5 rounded-lg hover:bg-white"
+              >
+                <div className="w-6 h-6 rounded-full bg-[#85181A]/10 text-[#85181A] flex items-center justify-center flex-shrink-0">
+                  <Mail size={13} />
+                </div>
+                <span><strong>Email :</strong> encg@uca.ac.ma</span>
+              </a>
+
+              {/* Adresse */}
+              <a
+                href="https://www.google.com/search?sca_esv=a32034c9d82639b0&sxsrf=APpeQntcpealz23IV8otmykwn0yHBGIW1A:1789124112052&q=national+school+of+commerce+and+management+of+marrakech+address&ludocid=2651658281646063652&sa=X&sqi=2&ved=2ahUKEwjjtaHZruaWAxXJUKQEHVfhI4oQ6BN6BAg1EAI"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-xs font-sans text-[#1A1A1A] hover:text-[#85181A] transition-colors p-1.5 rounded-lg hover:bg-white"
+              >
+                <div className="w-6 h-6 rounded-full bg-[#85181A]/10 text-[#85181A] flex items-center justify-center flex-shrink-0">
+                  <MapPin size={13} />
+                </div>
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="truncate"><strong>Adresse :</strong> MX2X+J8P, Bd Allal Al Fassi, Marrakech 40000</span>
+                  <ExternalLink size={12} className="flex-shrink-0 opacity-60" />
+                </div>
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
@@ -133,8 +184,8 @@ export default function ChatInterface({ category, onBack }) {
       id: Date.now(),
       role: 'nora',
       content: category
-        ? `Bonjour ! Je suis NORA, votre assistante ENCG 😊\nJe suis prête à répondre à vos questions sur **${category.name}**.\n\nVoici les questions fréquentes disponibles pour cette catégorie — touchez ou saisissez votre question !`
-        : 'Bonjour ! Je suis NORA, votre assistante ENCG 😊\nComment puis-je vous aider ?\n\nVoici les questions fréquentes — touchez ou saisissez votre question !',
+        ? `Bonjour ! Je suis NORA, votre assistante ENCG 😊\nJe suis prête à répondre à vos questions sur **${category.name}**.\n\nSélectionnez une question en haut ou posez directement votre question ci-dessous !`
+        : 'Bonjour ! Je suis NORA, votre assistante ENCG 😊\nComment puis-je vous aider ?\n\nSélectionnez une question en haut ou posez directement votre question ci-dessous !',
     }
     setMessages([welcome])
 
@@ -169,19 +220,29 @@ export default function ChatInterface({ category, onBack }) {
       const fn = version === 'v2' ? sendChatV2 : sendChatV1
       const res = await fn(trimmed)
 
+      const replyText = res.reply?.trim() || ''
+      const isUnanswered = !replyText || 
+        replyText.toLowerCase().includes('pas trouver') || 
+        replyText.toLowerCase().includes('pas de réponse') ||
+        replyText.toLowerCase().includes('désolé')
+
       const noraMsg = {
         id: Date.now() + 1,
         role: 'nora',
-        content: res.reply || 'Je n\'ai pas pu obtenir de réponse. Veuillez réessayer.',
+        content: isUnanswered
+          ? `Je n'ai pas trouvé de réponse précise à votre demande dans la base actuelle.\n\nVous pouvez contacter directement les services de l'ENCG Marrakech :`
+          : replyText,
         source: res.source,
         version: res.version,
+        showContactCard: isUnanswered,
       }
       setMessages((prev) => [...prev, noraMsg])
     } catch (err) {
       const errMsg = {
         id: Date.now() + 1,
         role: 'nora',
-        content: `⚠️ Une erreur s'est produite : ${err.message}\n\nVérifiez votre connexion ou contactez l'ENCG :\n📞 +212 524 33 70 26`,
+        content: `⚠️ Une erreur s'est produite lors du traitement de votre demande.\n\nVous pouvez joindre directement l'administration de l'ENCG Marrakech :`,
+        showContactCard: true,
       }
       setMessages((prev) => [...prev, errMsg])
       setIsOnline(false)
@@ -244,7 +305,7 @@ export default function ChatInterface({ category, onBack }) {
 
         {/* ── Header chat ──────────────────────────────────────────── */}
         <header className="flex items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-4
-                           border-b border-[#E8DDD0] bg-white/95 backdrop-blur-md z-20">
+                           border-b border-[#E8DDD0] bg-white/95 backdrop-blur-md z-20 flex-shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               id="chat-back-btn"
@@ -292,6 +353,46 @@ export default function ChatInterface({ category, onBack }) {
           </div>
         </header>
 
+        {/* ── Suggestions : PLACÉES EN HAUT DU CHAT ────────────────────────── */}
+        <AnimatePresence>
+          {filteredSuggestions.length > 0 && !isLoading && (
+            <motion.div
+              className="px-3.5 sm:px-6 py-2.5 bg-white/70 border-b border-[#E8DDD0]/80 backdrop-blur-xs flex flex-col gap-1.5 z-10 flex-shrink-0"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+            >
+              <div className="flex items-center justify-between px-0.5">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles size={13} className="text-[#85181A] flex-shrink-0" />
+                  <span className="font-sans text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#85181A]/90">
+                    {normalizedInput
+                      ? `Questions correspondantes (${filteredSuggestions.length}) :`
+                      : `Questions suggérées (${filteredSuggestions.length}) :`}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                {filteredSuggestions.map((q, i) => (
+                  <button
+                    key={i}
+                    id={`suggestion-${i}`}
+                    onClick={() => handleSuggestion(q)}
+                    className="flex-shrink-0 whitespace-nowrap px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full bg-white border border-[#E8DDD0]
+                               text-[#1A1A1A] text-[11px] sm:text-xs font-sans font-medium
+                               hover:border-[#85181A]/60 hover:bg-[#85181A] hover:text-white
+                               transition-all duration-150 shadow-xs hover:shadow-sm active:scale-95"
+                    title={q}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* ── Messages ─────────────────────────────────────────────── */}
         <div
           id="chat-messages"
@@ -309,48 +410,8 @@ export default function ChatInterface({ category, onBack }) {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* ── Suggestions : Filtrées en direct par la saisie et toujours disponibles ──────────── */}
-        <AnimatePresence>
-          {filteredSuggestions.length > 0 && !isLoading && (
-            <motion.div
-              className="px-3.5 sm:px-6 pb-2.5 sm:pb-3 flex flex-col gap-1.5 sm:gap-2"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 6 }}
-              transition={{ duration: 0.25 }}
-            >
-              <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-1.5">
-                  <Sparkles size={13} className="text-[#85181A] flex-shrink-0" />
-                  <span className="font-sans text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#85181A]/90">
-                    {normalizedInput
-                      ? `Questions correspondantes (${filteredSuggestions.length}) :`
-                      : `Questions disponibles (${filteredSuggestions.length}) :`}
-                  </span>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-32 sm:max-h-40 overflow-y-auto pr-1 pb-1">
-                {filteredSuggestions.map((q, i) => (
-                  <button
-                    key={i}
-                    id={`suggestion-${i}`}
-                    onClick={() => handleSuggestion(q)}
-                    className="text-left px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-white border border-[#E8DDD0]
-                               text-[#1A1A1A] text-[11px] sm:text-xs font-sans font-medium
-                               hover:border-[#85181A]/50 hover:bg-[#85181A]/5 hover:text-[#85181A]
-                               transition-all duration-150 shadow-xs hover:shadow-sm active:scale-98"
-                    title={q}
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* ── Barre de saisie ──────────────────────────────────────── */}
-        <div className="px-3.5 sm:px-6 pb-4 sm:pb-6 pt-2 sm:pt-3 border-t border-encg-border bg-encg-white/90 backdrop-blur-xs">
+        <div className="px-3.5 sm:px-6 pb-4 sm:pb-6 pt-2 sm:pt-3 border-t border-encg-border bg-encg-white/90 backdrop-blur-xs flex-shrink-0">
           <form
             id="chat-input-form"
             onSubmit={handleSubmit}
