@@ -45,6 +45,7 @@ services:
       AI_PROVIDER: ${AI_PROVIDER:-gemini}
       FLASK_ENV: ${FLASK_ENV:-production}
       SECRET_KEY: ${SECRET_KEY:-change-me}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
     ports:
       - "5000:5000"
     depends_on:
@@ -70,6 +71,8 @@ services:
       - "5173:5173"              
     environment:
       - VITE_USE_POLLING=true    
+      - BACKEND_URL=http://backend:5000
+      - VITE_API_URL=${VITE_API_URL:-}
     volumes:
       - ./frontend:/app          
       - /app/node_modules        

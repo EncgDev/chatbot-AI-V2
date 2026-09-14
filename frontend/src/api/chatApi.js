@@ -15,12 +15,14 @@
 
 import axios from 'axios'
 
-// ─── URL de base du backend ──────────────────────────────────────────────────
-// En dev  → vite.config.js proxy /api → localhost:5000  (pas besoin d'URL absolue)
-// En prod → VITE_API_URL injecté au build Docker (ex: http://backend:5000)
-const BASE_URL = import.meta.env.VITE_API_URL || ''
+// ─── URL de base dynamique du backend ─────────────────────────────────────────
+// Récupérée dynamiquement depuis le fichier .env (variable VITE_API_URL) :
+// - En réseau Wi-Fi local : ex: http://192.168.0.182:5000
+// - En mode proxy (ngrok / docker interne) : '' (relatif pour laisser le proxy faire le relais)
+const rawUrl = (import.meta.env.VITE_API_URL || '').trim()
+export const BASE_URL = rawUrl.includes('backend') ? '' : rawUrl
 
-// Instance Axios configurée
+// Instance Axios configurée avec l'URL dynamique
 const api = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,

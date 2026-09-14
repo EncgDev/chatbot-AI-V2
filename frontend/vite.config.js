@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   // Charge les variables .env pour les utiliser dans la config
   const env = loadEnv(mode, process.cwd(), '')
-  const apiTarget = env.VITE_API_URL || 'http://localhost:5000'
+  const apiTarget = process.env.BACKEND_URL || env.BACKEND_URL || env.VITE_API_URL || 'http://backend:5000'
 
   return {
     plugins: [react()],
