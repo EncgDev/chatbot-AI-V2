@@ -17,9 +17,10 @@ import axios from 'axios'
 
 // ─── URL de base dynamique du backend ─────────────────────────────────────────
 // Récupérée dynamiquement depuis le fichier .env (variable VITE_API_URL) :
+// - En mode tunnel Ngrok : https://iola-subfalciform-thinly.ngrok-free.dev
 // - En réseau Wi-Fi local : ex: http://192.168.0.182:5000
-// - En mode proxy (ngrok / docker interne) : '' (relatif pour laisser le proxy faire le relais)
-const rawUrl = (import.meta.env.VITE_API_URL || '').trim()
+// - En mode proxy interne : '' (relatif)
+const rawUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '')
 export const BASE_URL = rawUrl.includes('backend') ? '' : rawUrl
 
 // Instance Axios configurée avec l'URL dynamique
