@@ -1,4 +1,4 @@
-version: '3.9'
+name: chatbot-ai-v2
 
 services:
   # ─────────────────────────────────────────────
@@ -6,20 +6,20 @@ services:
   # ─────────────────────────────────────────────
   db:
     image: postgres:15-alpine
-    container_name: nora_db
+    container_name: nora_v2_db
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-nora_db}
       POSTGRES_USER: ${POSTGRES_USER:-nora_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nora_secret_password}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_v2:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
       - ./database/encgm_training_dataset_inserts.sql:/docker-entrypoint-initdb.d/02-inserts.sql:ro
     ports:
       - "5432:5432"
     networks:
-      - nora_network
+      - nora_v2_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nora_user} -d ${POSTGRES_DB:-nora_db}"]
       interval: 10s
@@ -33,7 +33,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: nora_backend
+    container_name: nora_v2_backend
     restart: unless-stopped
     environment:
       DB_HOST: db
@@ -52,7 +52,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      - nora_network
+      - nora_v2_network
     volumes:
       - ./backend:/app
 
@@ -64,7 +64,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: builder             
-    container_name: nora_frontend
+    container_name: nora_v2_frontend
     restart: unless-stopped
     command: npm run dev -- --host 0.0.0.0  
     ports:
@@ -79,15 +79,15 @@ services:
     depends_on:
       - backend
     networks:
-      - nora_network
+      - nora_v2_network
 
 # ─────────────────────────────────────────────
 #  VOLUMES & RÉSEAU
 # ─────────────────────────────────────────────
 volumes:
-  postgres_data:
+  postgres_data_v2:
     driver: local
 
 networks:
-  nora_network:
+  nora_v2_network:
     driver: bridge
