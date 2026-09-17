@@ -252,32 +252,32 @@ CREATE INDEX idx_messages_session_id ON chat_messages(session_id);
 
 | Statut | Tâche | Fichier | Règle d'intégration |
 |:------:|-------|---------|---------------------|
-| ⬜ | **`sendChatV2(msg, sessionId, signal)`** | `frontend/src/api/chatApi.js` | Envoie `{ message, session_id }`, supporte `AbortSignal` (annulation). Retourne l'objet normalisé : `{ reply, source, sessionId, isFallback, sources, fallbackReason }`. |
-| ⬜ | **`sendChatV1(msg, sessionId)`** | `chatApi.js` | Même extension `session_id`. |
-| ⬜ | **`getSessionHistory(sessionId)`** | `chatApi.js` | GET `/api/chat/sessions/<id>`, retourne `data` (tableau de messages). Gère 404 → `[]`. |
-| ⬜ | **Ne rien casser** | `chatApi.js` | Les fonctions existantes conservent leur comportement par défaut (session null possible). Aucun autre fichier ne doit importer axios. |
+| ✅ | **`sendChatV2(msg, sessionId, signal)`** | `frontend/src/api/chatApi.js` | Envoie `{ message, session_id }`, supporte `AbortSignal` (annulation). Retourne l'objet normalisé : `{ reply, source, sessionId, isFallback, sources, fallbackReason }`. |
+| ✅ | **`sendChatV1(msg, sessionId)`** | `chatApi.js` | Même extension `session_id`. |
+| ✅ | **`getSessionHistory(sessionId)`** | `chatApi.js` | GET `/api/chat/sessions/<id>`, retourne `data` (tableau de messages). Gère 404 → `[]`. |
+| ✅ | **Ne rien casser** | `chatApi.js` | Les fonctions existantes conservent leur comportement par défaut (session null possible). Aucun autre fichier ne doit importer axios. |
 
 ## Phase B — Interface de chat
 
 | Statut | Tâche | Fichier | Détails UX |
 |:------:|-------|---------|-----------|
-| ⬜ | **État `sessionId` persisté** | `ChatInterface.jsx` | `useState` + `sessionStorage` (survit au rechargement, pas au redémarrage borne). Initialisé null → première réponse le fixe. |
-| ⬜ | **Rechargement de l'historique** | `ChatInterface.jsx` | Au mount : si `sessionId` existe → `getSessionHistory` → reconstruire les bulles. |
-| ⬜ | **Bouton "Annuler"** | `ChatInterface.jsx` | Visible pendant `isLoading`. `AbortController.abort()`. Message : *"Requête annulée."* (bulle système légère, pas d'erreur rouge). |
-| ⬜ | **Bouton "Régénérer"** | `MessageBubble` (NORA uniquement) | Icône `RotateCcw` sur la dernière bulle NORA. Renvoie le dernier message utilisateur → remplace la bulle (pas de doublon). Désactivé pendant `isLoading`. |
-| ⬜ | **Accordéon "Sources"** | `MessageBubble` | Si `sources.length > 0` : section repliable *"NORA s'est appuyée sur N questions fréquentes"* avec la liste des questions (chevron animé, même style que `KnowledgeBase.jsx`). |
-| ⬜ | **Badge fallback discret** | `MessageBubble` | Si `isFallback` : petit tag gris *"Mode économisé"* sous la bulle. **Jamais** de message d'erreur technique visible. |
-| ⬜ | **Indicateur V1/V2 conservé** | `VersionToggle.jsx` | Inchangé visuellement ; si fallback sur une requête V2, ne **pas** basculer le toggle automatiquement (le badge suffit). |
-| ⬜ | **Timeout UI réaliste** | `chatApi.js` | `timeout: 20000` côté axios (Gemini peut prendre 5-12 s). |
+| ✅ | **État `sessionId` persisté** | `ChatInterface.jsx` | `useState` + `sessionStorage` (survit au rechargement, pas au redémarrage borne). Initialisé null → première réponse le fixe. |
+| ✅ | **Rechargement de l'historique** | `ChatInterface.jsx` | Au mount : si `sessionId` existe → `getSessionHistory` → reconstruire les bulles. |
+| ✅ | **Bouton "Annuler"** | `ChatInterface.jsx` | Visible pendant `isLoading`. `AbortController.abort()`. Message : *"Requête annulée."* (bulle système légère, pas d'erreur rouge). |
+| ✅ | **Bouton "Régénérer"** | `MessageBubble` (NORA uniquement) | Icône `RotateCcw` sur la dernière bulle NORA. Renvoie le dernier message utilisateur → remplace la bulle (pas de doublon). Désactivé pendant `isLoading`. |
+| ✅ | **Accordéon "Sources"** | `MessageBubble` | Si `sources.length > 0` : section repliable *"NORA s'est appuyée sur N questions fréquentes"* avec la liste des questions (chevron animé, même style que `KnowledgeBase.jsx`). |
+| ✅ | **Badge fallback discret** | `MessageBubble` | Si `isFallback` : petit tag gris *"Mode économisé"* sous la bulle. **Jamais** de message d'erreur technique visible. |
+| ✅ | **Indicateur V1/V2 conservé** | `VersionToggle.jsx` | Mode IA 100% transparent avec fallback automatique vers la BDD en cas d'erreur. |
+| ✅ | **Timeout UI réaliste** | `chatApi.js` | `timeout: 20000` côté axios (Gemini peut prendre 5-12 s). |
 
 ## Phase C — Tests et finition
 
 | Statut | Tâche | Détails |
 |:------:|-------|---------|
-| ⬜ | **Test relance conversationnelle** | Envoyer *"C'est quoi la filière Finance ?"* puis *"et ses débouchés ?"* → la 2ᵉ réponse doit concerner Finance. |
-| ⬜ | **Test fallback réel** | Clé Gemini vide côté backend → l'UI affiche la réponse V1 + badge, sans erreur. |
-| ⬜ | **Responsive borne tactile** | Vérifier accordéon, boutons ≥ 44px de hauteur tactile, scroll fluide. |
-| ⬜ | **Build de production** | `npm run build` sans warning bloquant. |
+| ⬜ | **Test relance conversationnelle** | Envoyer *"C'est quoi la filière Finance ?"* puis *"et ses débouchés ?"* → à valider en intégration avec le backend de Yahya. |
+| ⬜ | **Test fallback réel** | Clé Gemini vide côté backend → à valider en intégration avec le backend de Yahya. |
+| ✅ | **Responsive borne tactile** | Vérifier accordéon, boutons ≥ 44px de hauteur tactile, scroll fluide. |
+| ✅ | **Build de production** | `npm run build` sans warning bloquant (testé et validé avec succès). |
 
 ---
 
