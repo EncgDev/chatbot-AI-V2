@@ -183,10 +183,10 @@ CREATE INDEX idx_messages_session_id ON chat_messages(session_id);
 
 | Statut | Tâche | Fichier / Livrable | Règle d'intégration |
 |:------:|-------|--------------------|---------------------|
-| ⬜ | **Activer l'extension UUID** | `database/init.sql` | Ajouter `CREATE EXTENSION IF NOT EXISTS pgcrypto;` en haut du fichier (requis pour `gen_random_uuid()`). |
-| ⬜ | **Créer `chat_sessions` + `chat_messages`** | `database/init.sql` | Schéma **exact** de la Section 2.3. Ajouter à la fin du fichier. Ne pas toucher aux tables existantes. |
-| ⬜ | **Index `idx_messages_session_id`** | `database/init.sql` | Index sur `chat_messages(session_id)` — indispensable pour la lecture de l'historique. |
-| ⬜ | **FK cascade sur QAs** | `database/init.sql` | Ajouter explicitement `ON DELETE CASCADE` sur `QAs.category_id` (cohérence avec `models.py` qui l'attend déjà). |
+| ✅ | **Activer l'extension UUID** | `database/init.sql` | `CREATE EXTENSION IF NOT EXISTS pgcrypto;` ajouté en haut du fichier. |
+| ✅ | **Créer `chat_sessions` + `chat_messages`** | `database/init.sql` | Tables créées — schéma exact conforme à la Section 2.3. Tables existantes non modifiées. |
+| ✅ | **Index `idx_messages_session_id`** | `database/init.sql` | `CREATE INDEX IF NOT EXISTS idx_messages_session_id ON chat_messages(session_id);` ajouté. |
+| ✅ | **FK cascade sur QAs** | `database/init.sql` | `ON DELETE CASCADE` ajouté sur `QAs.category_id` — cohérence assurée avec `models.py`. |
 | ⬜ | **Nettoyage data : orthographe & accents** | `database/encgm_training_dataset_inserts.sql` | Relecture complète : apostrophes typographiques cohérentes, pas de doubles espaces, ponctuation française. |
 | ⬜ | **Nettoyage data : supprimer les placeholders** | `database/encgm_training_dataset_inserts.sql` | Remplacer les réponses type *"doivent être repris du descriptif institutionnel validé ; ne pas les inventer"* par du contenu réel ou supprimer la QA (l'IA ne doit jamais lire ça en contexte RAG). |
 | ⬜ | **Ajout de nouvelles QAs fréquentes** | `database/encgm_training_dataset_inserts.sql` | Monter à 100+ QAs : bourses, stages, rattrapages, clubs, rentrée, calendrier des concours, mobilité internationale. IDs de catégories **existants uniquement** (1 à 10). |
@@ -205,24 +205,24 @@ CREATE INDEX idx_messages_session_id ON chat_messages(session_id);
 
 | Statut | Tâche | Fichier | Détails & règles |
 |:------:|-------|---------|------------------|
-| ⬜ | **Modèle `ChatSession`** | `backend/app/models.py` | Miroir exact du SQL de Soufiane. `id = db.Column(UUID(as_uuid=True), ...)`. |
-| ⬜ | **Modèle `ChatMessage`** | `backend/app/models.py` | Colonnes : `session_id` (FK cascade), `role`, `content`, `version`, `created_at`. Méthode `to_dict()` conforme à la Section 2.2. |
-| ⬜ | **Service `ConversationService`** | `backend/app/services/conversation_service.py` (nouveau) | Fonctions : `get_or_create_session(session_id)`, `save_message(session_id, role, content, version)`, `get_history(session_id, limit=6)`. **Limiter à 6 derniers messages** (ordre chronologique) pour le prompt. |
-| ⬜ | **Modifier `POST /api/chat/v2`** | `backend/app/routes/chat.py` | Accepter `session_id` optionnel dans le body. Créer la session si absente. Sauvegarder message user + réponse NORA en BDD. Retourner `session_id` dans la réponse. |
-| ⬜ | **Modifier `POST /api/chat/v1`** | `backend/app/routes/chat.py` | Même logique de session (version `"v1"`). |
-| ⬜ | **Nouvelle route `GET /api/chat/sessions/<uuid>`** | `backend/app/routes/chat.py` (ou nouveau `sessions.py`) | Retourne l'historique complet, format §2.2. 404 au format `{ "success": false, "error": "Session introuvable." }`. |
-| ⬜ | **Enrichir le prompt Gemini avec l'historique** | `backend/app/services/gemini_service.py` | Nouveau paramètre `history: List[ChatMessage]`. Format injecté : `### HISTORIQUE DE LA CONVERSATION : user: ... / NORA: ...`. L'historique passe AVANT le contexte RAG. |
-| ⬜ | **Instruction anti-hallucination dans SYSTEM_PROMPT** | `gemini_service.py` | Ajouter : *"Appuie-toi sur l'historique pour comprendre les relances (reformule les pronoms : 'ses', 'il', 'elle' → le sujet réel). Réponds uniquement à partir du contexte fourni ; sinon oriente vers encg-marrakech.uca.ma."* |
+| ✅ | **Modèle `ChatSession`** | `backend/app/models.py` | Miroir exact du SQL de Soufiane. `id = db.Column(UUID(as_uuid=True), ...)`. |
+| ✅ | **Modèle `ChatMessage`** | `backend/app/models.py` | Colonnes : `session_id` (FK cascade), `role`, `content`, `version`, `created_at`. Méthode `to_dict()` conforme à la Section 2.2. |
+| ✅ | **Service `ConversationService`** | `backend/app/services/conversation_service.py` (nouveau) | Fonctions : `get_or_create_session(session_id)`, `save_message(session_id, role, content, version)`, `get_history(session_id, limit=6)`. **Limiter à 6 derniers messages** (ordre chronologique) pour le prompt. |
+| ✅ | **Modifier `POST /api/chat/v2`** | `backend/app/routes/chat.py` | Accepter `session_id` optionnel dans le body. Créer la session si absente. Sauvegarder message user + réponse NORA en BDD. Retourner `session_id` dans la réponse. |
+| ✅ | **Modifier `POST /api/chat/v1`** | `backend/app/routes/chat.py` | Même logique de session (version `"v1"`). |
+| ✅ | **Nouvelle route `GET /api/chat/sessions/<uuid>`** | `backend/app/routes/chat.py` (ou nouveau `sessions.py`) | Retourne l'historique complet, format §2.2. 404 au format `{ "success": false, "error": "Session introuvable." }`. |
+| ✅ | **Enrichir le prompt Gemini avec l'historique** | `backend/app/services/gemini_service.py` | Nouveau paramètre `history: List[ChatMessage]`. Format injecté : `### HISTORIQUE DE LA CONVERSATION : user: ... / NORA: ...`. L'historique passe AVANT le contexte RAG. |
+| ✅ | **Instruction anti-hallucination dans SYSTEM_PROMPT** | `gemini_service.py` | Ajouter : *"Appuie-toi sur l'historique pour comprendre les relances (reformule les pronoms : 'ses', 'il', 'elle' → le sujet réel). Réponds uniquement à partir du contexte fourni ; sinon oriente vers encg-marrakech.uca.ma."* |
 
 ## Phase B — Fallback automatique V2 → V1
 
 | Statut | Tâche | Fichier | Détails & règles |
 |:------:|-------|---------|------------------|
-| ⬜ | **Chaîne de fallback** | `backend/app/routes/chat.py` | `try: GeminiService (timeout 12s)` → `except (quota, 5xx, timeout, non configuré):` → appeler `SearchService.search_qas` et renvoyer le format fallback de §2.2. **Jamais de 503 visible pour l'utilisateur final quand la V1 peut répondre.** |
-| ⬜ | **`fallback_reason` normalisé** | `chat.py` | Valeurs autorisées : `"no_api_key"`, `"quota_exceeded"`, `"gemini_timeout"`, `"gemini_error"`. Rien d'autre (le frontend s'appuie dessus). |
-| ⬜ | **Header de diagnostic** | `chat.py` | Ajouter `X-Nora-Fallback: true` sur la réponse fallback (utile pour les tests et les logs). |
-| ⬜ | **Gemini call avec timeout** | `gemini_service.py` | `request_options={"timeout": 12}` sur `generate_content`. Ne jamais bloquer le worker Flask indéfiniment. |
-| ⬜ | **Test manuel du fallback** | curl/Postman | Lancer avec `AI_API_KEY=` vide → V2 doit renvoyer `source: "v1-fallback"`. Puis avec une fausse clé → idem. Documenter les 2 réponses curl dans la PR. |
+| ✅ | **Chaîne de fallback** | `backend/app/routes/chat.py` | `try: GeminiService (timeout 12s)` → `except (quota, 5xx, timeout, non configuré):` → appeler `SearchService.search_qas` et renvoyer le format fallback de §2.2. **Jamais de 503 visible pour l'utilisateur final quand la V1 peut répondre.** |
+| ✅ | **`fallback_reason` normalisé** | `chat.py` | Valeurs autorisées : `"no_api_key"`, `"quota_exceeded"`, `"gemini_timeout"`, `"gemini_error"`. Rien d'autre (le frontend s'appuie dessus). |
+| ✅ | **Header de diagnostic** | `chat.py` | Ajouter `X-Nora-Fallback: true` sur la réponse fallback (utile pour les tests et les logs). |
+| ✅ | **Gemini call avec timeout** | `gemini_service.py` | `request_options={"timeout": 12}` sur `generate_content`. Ne jamais bloquer le worker Flask indéfiniment. |
+| ✅ | **Test manuel du fallback** | curl/Postman | Lancer avec `AI_API_KEY=` vide → V2 doit renvoyer `source: "v1-fallback"`. Puis avec une fausse clé → idem. Documenter les 2 réponses curl dans la PR. |
 
 ## Phase C — Recherche sémantique (anti-nettoyage manuel)
 
@@ -238,9 +238,9 @@ CREATE INDEX idx_messages_session_id ON chat_messages(session_id);
 
 | Statut | Tâche | Fichier | Détails |
 |:------:|-------|---------|---------|
-| ⬜ | **`.env.example` à jour** | `backend/.env.example` | Ajouter toute nouvelle variable (ex: `EMBEDDING_PROVIDER`, `GEMINI_TIMEOUT_S=12`). |
-| ⬜ | **Tests API complets** | curl / Postman | Collection documentée dans la PR : health, categories, qas, chat v1, chat v2 (succès), chat v2 (fallback), v2 avec relance, session history. |
-| ⬜ | **Logs propres** | `app/services/*.py` | `logger.info` sur chaque fallback (avec `fallback_reason`), `logger.error` sur exceptions. Pas de `print` en production. |
+| ✅ | **`.env.example` à jour** | `backend/.env.example` | Ajouter toute nouvelle variable (ex: `EMBEDDING_PROVIDER`, `GEMINI_TIMEOUT_S=12`). |
+| ✅ | **Tests API complets** | curl / Postman | Collection documentée dans la PR : health, categories, qas, chat v1, chat v2 (succès), chat v2 (fallback), v2 avec relance, session history. |
+| ✅ | **Logs propres** | `app/services/*.py` | `logger.info` sur chaque fallback (avec `fallback_reason`), `logger.error` sur exceptions. Pas de `print` en production. |
 
 ---
 
