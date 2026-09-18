@@ -183,10 +183,10 @@ CREATE INDEX idx_messages_session_id ON chat_messages(session_id);
 
 | Statut | Tâche | Fichier / Livrable | Règle d'intégration |
 |:------:|-------|--------------------|---------------------|
-| ⬜ | **Activer l'extension UUID** | `database/init.sql` | Ajouter `CREATE EXTENSION IF NOT EXISTS pgcrypto;` en haut du fichier (requis pour `gen_random_uuid()`). |
-| ⬜ | **Créer `chat_sessions` + `chat_messages`** | `database/init.sql` | Schéma **exact** de la Section 2.3. Ajouter à la fin du fichier. Ne pas toucher aux tables existantes. |
-| ⬜ | **Index `idx_messages_session_id`** | `database/init.sql` | Index sur `chat_messages(session_id)` — indispensable pour la lecture de l'historique. |
-| ⬜ | **FK cascade sur QAs** | `database/init.sql` | Ajouter explicitement `ON DELETE CASCADE` sur `QAs.category_id` (cohérence avec `models.py` qui l'attend déjà). |
+| ✅ | **Activer l'extension UUID** | `database/init.sql` | `CREATE EXTENSION IF NOT EXISTS pgcrypto;` ajouté en haut du fichier. |
+| ✅ | **Créer `chat_sessions` + `chat_messages`** | `database/init.sql` | Tables créées — schéma exact conforme à la Section 2.3. Tables existantes non modifiées. |
+| ✅ | **Index `idx_messages_session_id`** | `database/init.sql` | `CREATE INDEX IF NOT EXISTS idx_messages_session_id ON chat_messages(session_id);` ajouté. |
+| ✅ | **FK cascade sur QAs** | `database/init.sql` | `ON DELETE CASCADE` ajouté sur `QAs.category_id` — cohérence assurée avec `models.py`. |
 | ⬜ | **Nettoyage data : orthographe & accents** | `database/encgm_training_dataset_inserts.sql` | Relecture complète : apostrophes typographiques cohérentes, pas de doubles espaces, ponctuation française. |
 | ⬜ | **Nettoyage data : supprimer les placeholders** | `database/encgm_training_dataset_inserts.sql` | Remplacer les réponses type *"doivent être repris du descriptif institutionnel validé ; ne pas les inventer"* par du contenu réel ou supprimer la QA (l'IA ne doit jamais lire ça en contexte RAG). |
 | ⬜ | **Ajout de nouvelles QAs fréquentes** | `database/encgm_training_dataset_inserts.sql` | Monter à 100+ QAs : bourses, stages, rattrapages, clubs, rentrée, calendrier des concours, mobilité internationale. IDs de catégories **existants uniquement** (1 à 10). |
