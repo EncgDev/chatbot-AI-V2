@@ -228,11 +228,11 @@ CREATE INDEX idx_messages_session_id ON chat_messages(session_id);
 
 | Statut | Tâche | Fichier | Détails & règles |
 |:------:|-------|---------|------------------|
-| ⬜ | **Décision embeddings validée en équipe** | Discussion équipe | Option A : Gemini Embeddings API (simple, payant/quota). Option B : `sentence-transformers` local avec `paraphrase-multilingual-MiniLM-L12-v2` (0 coût, +~400 Mo dans l'image Docker). ➜ **Recommandé : Option A au début.** |
-| ⬜ | **Colonne `embedding`** | Demande à Soufiane (PR croisée) | `ALTER TABLE QAs ADD COLUMN embedding VECTOR(768);` + extension `pgvector`. Requiert mise à jour image Postgres **OU** stockage hors BDD (fichier JSON d'embeddings généré au build) si changement BDD trop lourd. |
-| ⬜ | **Script de vectorisation** | `backend/scripts/embed_qas.py` (nouveau) | Lit toutes les QAs, calcule l'embedding de `question + " " + response`, sauvegarde. Rejouable à chaque changement de dataset. |
-| ⬜ | **`SearchService.search_qas_semantic()`** | `backend/app/services/search_service.py` | Top-5 par similarité cosinus. **Conserver l'ancienne recherche SQL** comme secours (robustesse). |
-| ⬜ | **Retourner `sources` au frontend** | `chat.py` | Liste `[{id, question}]` des QAs utilisées comme contexte — alimente l'accordéon Sources de Youssef. |
+| ✅ | **Décision embeddings validée en équipe** | Discussion équipe | Option A : Gemini Embeddings API (simple, payant/quota). Option B : `sentence-transformers` local avec `paraphrase-multilingual-MiniLM-L12-v2` (0 coût, +~400 Mo dans l'image Docker). ➜ **Recommandé : Option A au début.** |
+| ✅ | **Colonne `embedding`** | Demande à Soufiane (PR croisée) | Stockage hors BDD (fichier JSON `data/embeddings.json`) retenu pour Phase C sans alourdir le schéma Postgres existant. |
+| ✅ | **Script de vectorisation** | `backend/scripts/embed_qas.py` (nouveau) | Lit toutes les QAs, calcule l'embedding de `question + " " + response`, sauvegarde. Rejouable à chaque changement de dataset. |
+| ✅ | **`SearchService.search_qas_semantic()`** | `backend/app/services/search_service.py` | Top-5 par similarité cosinus. **Conserver l'ancienne recherche SQL** comme secours (robustesse). |
+| ✅ | **Retourner `sources` au frontend** | `chat.py` | Liste `[{id, question}]` des QAs utilisées comme contexte — alimente l'accordéon Sources de Youssef. |
 
 ## Phase D — Qualité
 

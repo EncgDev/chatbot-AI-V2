@@ -18,11 +18,13 @@ def health_check():
         db.session.execute(text("SELECT 1"))
         db_status = "ok"
     except Exception:
+        db.session.rollback()
         db_status = "error"
 
+    status_code = 200 if db_status == "ok" else 503
     return jsonify({
-        "status":   "ok",
+        "status":   "ok" if db_status == "ok" else "degraded",
         "service":  "NORA API",
         "database": db_status,
         "version":  "1.0.0",
-    })
+    }), status_code

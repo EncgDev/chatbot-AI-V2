@@ -16,6 +16,7 @@ import uuid as uuid_lib
 
 from flask import Blueprint, request, jsonify, current_app
 
+from app.models import db
 from app.services import SearchService, GeminiService, ConversationService
 
 logger = logging.getLogger("NORA.Chat")
@@ -94,12 +95,15 @@ def chat_v1():
     message, session_id = _extract_request()
     if not message:
         return jsonify({"success": False, "error": "Le champ 'message' est requis."}), 400
+    if len(message) > 1000:
+        return jsonify({"success": False, "error": "Le message ne peut pas dépasser 1000 caractères."}), 400
 
     try:
         session = ConversationService.get_or_create_session(session_id)
         ConversationService.save_message(session, "user", message)
         return _respond_v1(message, session, source="sql")
     except Exception as e:
+        db.session.rollback()
         logger.error(f"Erreur chat_v1: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -117,13 +121,15 @@ def chat_v2():
     message, session_id = _extract_request()
     if not message:
         return jsonify({"success": False, "error": "Le champ 'message' est requis."}), 400
+    if len(message) > 1000:
+        return jsonify({"success": False, "error": "Le message ne peut pas dépasser 1000 caractères."}), 400
 
     try:
         session = ConversationService.get_or_create_session(session_id)
         ConversationService.save_message(session, "user", message)
 
         api_key = current_app.config.get("AI_API_KEY", "")
-        model_name = current_app.config.get("AI_MODEL", "gemini-1.5-flash")
+        model_name = current_app.config.get("AI_MODEL", "gemini-3.5-flash-lite")
         gemini_svc = GeminiService(api_key=api_key, model_name=model_name)
 
         # ── Cas 1 : service non configuré → fallback direct ──────────────
@@ -135,7 +141,12 @@ def chat_v2():
         # ── Cas 2 : tentative Gemini, fallback sur échec ─────────────────
         history = ConversationService.get_history(session.id,
                                                   limit=ConversationService.MAX_HISTORY)
-        context_qas = SearchService.search_qas(message, limit=5)
+
+        # Recherche sémantique (Phase C) avec repli automatique sur le SQL
+        context_qas = SearchService.search_qas_semantic(message, limit=5)
+        if not context_qas:
+            logger.info("Repli sur la recherche SQL (recherche sémantique vide ou indisponible).")
+            context_qas = SearchService.search_qas(message, limit=5)
 
         try:
             result = gemini_svc.generate_response(message, context_qas, history)
@@ -170,6 +181,7 @@ def chat_v2():
         })
 
     except Exception as e:
+        db.session.rollback()
         logger.error(f"Erreur chat_v2: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 

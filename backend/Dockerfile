@@ -30,5 +30,6 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:5000/api/health || exit 1
 
-# ─── Lancement avec Gunicorn ─────────────────────────────────
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:create_app()"]
+# ─── Lancement : génération des embeddings (si absents) puis Gunicorn ─
+# Phase C (Yahya) : le script est idempotent et ne bloque jamais le démarrage.
+CMD ["sh", "-c", "python scripts/embed_qas.py --if-missing || true; exec gunicorn --bind 0.0.0.0:5000 'app:create_app()'"]

@@ -43,9 +43,14 @@ class ConversationService:
                 logger.info(f"Session {parsed} introuvable en BDD -> nouvelle session.")
 
         session = ChatSession()
-        db.session.add(session)
-        db.session.commit()
-        return session
+        try:
+            db.session.add(session)
+            db.session.commit()
+            return session
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Erreur création ChatSession : {e}")
+            raise
 
     @staticmethod
     def save_message(
@@ -58,17 +63,22 @@ class ConversationService:
         if role not in ConversationService.VALID_ROLES:
             raise ValueError(f"Rôle invalide : {role!r} (attendu : 'user' ou 'nora')")
 
-        msg = ChatMessage(
-            session_id=session.id,
-            role=role,
-            content=content,
-            version=version,
-        )
-        db.session.add(msg)
-        # Rafraîchit last_active de la session
-        session.last_active = db.func.now()
-        db.session.commit()
-        return msg
+        try:
+            msg = ChatMessage(
+                session_id=session.id,
+                role=role,
+                content=content,
+                version=version,
+            )
+            db.session.add(msg)
+            # Rafraîchit last_active de la session
+            session.last_active = db.func.now()
+            db.session.commit()
+            return msg
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Erreur sauvegarde ChatMessage : {e}")
+            raise
 
     @staticmethod
     def get_history(session_id, limit: int = MAX_HISTORY) -> List[ChatMessage]:
@@ -81,18 +91,14 @@ class ConversationService:
         except (ValueError, AttributeError, TypeError):
             return []
 
-        latest_ids = db.session.query(ChatMessage.id).filter(
-            ChatMessage.session_id == parsed
-        ).order_by(
-            ChatMessage.created_at.desc(), ChatMessage.id.desc()
-        ).limit(limit).subquery()
-
-        return (
-            db.session.query(ChatMessage)
-            .filter(ChatMessage.id.in_(db.session.query(latest_ids.c.id)))
-            .order_by(ChatMessage.created_at.asc(), ChatMessage.id.asc())
+        messages = (
+            ChatMessage.query.filter_by(session_id=parsed)
+            .order_by(ChatMessage.created_at.desc(), ChatMessage.id.desc())
+            .limit(limit)
             .all()
         )
+        messages.reverse()
+        return messages
 
     @staticmethod
     def get_full_history(session_id) -> Optional[List[ChatMessage]]:
