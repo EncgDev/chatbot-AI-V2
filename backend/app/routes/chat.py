@@ -129,7 +129,7 @@ def chat_v2():
         ConversationService.save_message(session, "user", message)
 
         api_key = current_app.config.get("AI_API_KEY", "")
-        model_name = current_app.config.get("AI_MODEL", "gemini-1.5-flash")
+        model_name = current_app.config.get("AI_MODEL", "gemini-3.5-flash-lite")
         gemini_svc = GeminiService(api_key=api_key, model_name=model_name)
 
         # ── Cas 1 : service non configuré → fallback direct ──────────────

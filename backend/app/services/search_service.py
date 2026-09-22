@@ -1,4 +1,4 @@
-﻿"""
+"""
 app/services/search_service.py â€” Moteur de recherche textuelle SQL intelligent (V1 NORA)
 Auteur : Yahya
 
@@ -21,7 +21,7 @@ from app.models import QA
 logger = logging.getLogger("NORA.SearchService")
 
 # â”€â”€â”€ ParamÃ¨tres de la recherche sÃ©mantique (Phase C â€” Option A : API Gemini) â”€â”€
-EMBEDDING_MODEL    = "models/text-embedding-004"
+EMBEDDING_MODEL    = "models/gemini-embedding-001"
 EMBEDDING_TIMEOUT_S = 8
 SEMANTIC_THRESHOLD = 0.55        # Score cosinus minimal pour retenir une QA
 EMBEDDINGS_FILE    = Path(__file__).resolve().parents[2] / "data" / "embeddings.json"

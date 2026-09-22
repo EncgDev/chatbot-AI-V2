@@ -29,7 +29,7 @@ from config import Config  # noqa: E402
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("NORA.EmbedQAs")
 
-EMBEDDING_MODEL = "models/text-embedding-004"
+EMBEDDING_MODEL = "models/gemini-embedding-001"
 DATA_FILE = BACKEND_DIR / "data" / "embeddings.json"
 
 

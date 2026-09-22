@@ -34,7 +34,7 @@ class GeminiService:
         "Reste concise, polie et directe."
     )
 
-    def __init__(self, api_key: str, model_name: str = "gemini-1.5-flash"):
+    def __init__(self, api_key: str, model_name: str = "gemini-3.5-flash-lite"):
         self.api_key = api_key
         self.model_name = model_name
         self._configured = False
