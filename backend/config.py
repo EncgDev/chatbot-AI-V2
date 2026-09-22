@@ -52,7 +52,7 @@ class Config:
     # ─── IA — Google Gemini ───────────────────────────────────
     AI_API_KEY  = os.environ.get("AI_API_KEY", "")
     AI_PROVIDER = os.environ.get("AI_PROVIDER", "gemini")
-    AI_MODEL    = os.environ.get("AI_MODEL", "gemini-3.5-flash-lite")
+    AI_MODEL    = os.environ.get("AI_MODEL", "gemini-2.5-flash")
 
     # ─── CORS ────────────────────────────────────────────────
     _raw_cors   = os.environ.get("CORS_ORIGINS", "*")
