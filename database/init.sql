@@ -58,3 +58,5 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 
 -- Index de performance pour la lecture de l'historique par session
 CREATE INDEX IF NOT EXISTS idx_messages_session_id ON chat_messages(session_id);
+  
+CREATE OR REPLACE VIEW qas AS SELECT * FROM "QAs"; 

@@ -124,8 +124,20 @@ class GeminiService:
             request_options={"timeout": GEMINI_TIMEOUT_S},
         )
 
+        text_content = ""
+        try:
+            text_content = response.text.strip()
+        except (ValueError, AttributeError) as e:
+            if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
+                text_content = "".join(
+                    getattr(part, "text", "") for part in response.candidates[0].content.parts
+                ).strip()
+            if not text_content:
+                logger.warning(f"Réponse Gemini sans texte ou bloquée : {e}")
+                raise ValueError(f"Réponse Gemini vide ou bloquée par les filtres de sécurité : {e}")
+
         return {
-            "response":      response.text.strip(),
+            "response":      text_content,
             "context_used":  len(context_qas) > 0,
             "context_count": len(context_qas),
             "model":         self.model_name,

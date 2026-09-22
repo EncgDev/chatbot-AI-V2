@@ -47,8 +47,11 @@ class QA(db.Model):
     question    TEXT NOT NULL
     response    TEXT NOT NULL
     category_id INT  NOT NULL  FK → categories(id)
+
+    ⚠️ Le nom exact "QAs" (casse préservée) vient de init.sql :
+       CREATE TABLE "QAs" — SQLAlchemy le cite automatiquement.
     """
-    __tablename__ = "qas"
+    __tablename__ = "QAs"
 
     id          = db.Column(db.Integer, primary_key=True)
     question    = db.Column(db.Text,    nullable=False)

@@ -30,7 +30,7 @@ class Config:
     # ─── PostgreSQL via SQLAlchemy ────────────────────────────
     DB_HOST     = os.environ.get("DB_HOST", "localhost")
     DB_PORT     = os.environ.get("DB_PORT", "5432")
-    DB_NAME     = os.environ.get("DB_NAME", "nora_db")
+    DB_NAME     = os.environ.get("DB_NAME", "nora_v2_db")
     DB_USER     = os.environ.get("DB_USER", "nora_user")
     DB_PASSWORD = os.environ.get("DB_PASSWORD", "nora_secret_password")
 
@@ -39,7 +39,7 @@ class Config:
         f"{os.environ.get('DB_PASSWORD','nora_secret_password')}@"
         f"{os.environ.get('DB_HOST','localhost')}:"
         f"{os.environ.get('DB_PORT','5432')}/"
-        f"{os.environ.get('DB_NAME','nora_db')}"
+        f"{os.environ.get('DB_NAME','nora_v2_db')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
@@ -55,7 +55,8 @@ class Config:
     AI_MODEL    = os.environ.get("AI_MODEL", "gemini-1.5-flash")
 
     # ─── CORS ────────────────────────────────────────────────
-    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*").split(",")
+    _raw_cors   = os.environ.get("CORS_ORIGINS", "*")
+    CORS_ORIGINS = [orig.strip() for orig in _raw_cors.split(",") if orig.strip()]
 
 
 class DevelopmentConfig(Config):

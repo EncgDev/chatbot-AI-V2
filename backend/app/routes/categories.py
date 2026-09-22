@@ -4,7 +4,8 @@ Auteur : Yahya
 """
 import logging
 from flask import Blueprint, jsonify
-from app.models import Category
+from sqlalchemy import func
+from app.models import db, Category, QA
 
 logger = logging.getLogger("NORA.Categories")
 categories_bp = Blueprint("categories", __name__)
@@ -25,11 +26,26 @@ def get_categories():
     """
     try:
         categories = Category.query.order_by(Category.id).all()
+        # Calcul groupé pour éliminer le problème N+1 requêtes
+        qa_counts = dict(
+            db.session.query(QA.category_id, func.count(QA.id))
+            .group_by(QA.category_id)
+            .all()
+        )
+        data = [
+            {
+                "id":       c.id,
+                "name":     c.name,
+                "qa_count": qa_counts.get(c.id, 0),
+            }
+            for c in categories
+        ]
         return jsonify({
             "success": True,
-            "data":    [c.to_dict() for c in categories],
+            "data":    data,
             "total":   len(categories),
         })
     except Exception as e:
+        db.session.rollback()
         logger.error(f"Erreur get_categories: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
