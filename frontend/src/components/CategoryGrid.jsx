@@ -92,7 +92,7 @@ function getFormattedDate(now) {
 function getFormattedTime(now) {
   const h = String(now.getHours()).padStart(2, '0')
   const m = String(now.getMinutes()).padStart(2, '0')
-  return `${h}:${m}`
+  return `${h - 1}:${m}`
 }
 
 // ─── Arrière-plan fidèle à la maquette ─────────────────────────────────────────
@@ -181,7 +181,7 @@ function KioskCategoryCard({ category, index, onClick }) {
         <h3 className="font-sans font-bold text-sm sm:text-base md:text-lg text-[#1A1A1A] leading-tight group-hover:text-[#85181A] transition-colors">
           {category.name}
         </h3>
-        
+
       </div>
 
       {/* Bouton rond avec flèche chevron en bas à droite */}

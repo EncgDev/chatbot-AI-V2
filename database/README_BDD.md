@@ -187,6 +187,74 @@ SELECT count(*) FROM chat_messages WHERE session_id = '<uuid>';  -- Doit retourn
 
 ---
 
+## 6️⃣ Back-Office Admin — Tables V2.1 (Soufiane)
+
+Conformément à `TASKS_ADMIN.md` (§2.1 & §4), deux tables d'administration et leurs index ont été ajoutés à la fin de `database/init.sql` (Section 4).
+
+### Table `admin_users`
+Stocke les comptes des administrateurs du back-office.
+
+```sql
+CREATE TABLE IF NOT EXISTS admin_users (
+    id            SERIAL PRIMARY KEY,
+    email         VARCHAR(120) UNIQUE NOT NULL,
+    password_hash VARCHAR(255)  NOT NULL,
+    full_name     VARCHAR(80),
+    is_active     BOOLEAN       NOT NULL DEFAULT TRUE,
+    created_at    TIMESTAMP     NOT NULL DEFAULT NOW(),
+    last_login    TIMESTAMP
+);
+```
+
+| Colonne | Type | Rôle |
+|---------|------|------|
+| `id` | `SERIAL PK` | Identifiant unique de l'administrateur |
+| `email` | `VARCHAR(120) UNIQUE NOT NULL` | Email de connexion |
+| `password_hash` | `VARCHAR(255) NOT NULL` | Hash de mot de passe (Werkzeug / Argon2 / bcrypt) |
+| `full_name` | `VARCHAR(80)` | Nom complet de l'administrateur |
+| `is_active` | `BOOLEAN NOT NULL DEFAULT TRUE` | Compte actif ou désactivé |
+| `created_at` | `TIMESTAMP NOT NULL DEFAULT NOW()` | Date de création du compte |
+| `last_login` | `TIMESTAMP` | Horodatage de la dernière connexion réussie |
+
+### Table `admin_sessions`
+Gère les sessions d'authentification par token révocable (durée 12 h).
+
+```sql
+CREATE TABLE IF NOT EXISTS admin_sessions (
+    id          SERIAL PRIMARY KEY,
+    user_id     INT          NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+    token       VARCHAR(64)  NOT NULL UNIQUE,
+    created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
+    expires_at  TIMESTAMP    NOT NULL,
+    revoked     BOOLEAN      NOT NULL DEFAULT FALSE
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_token ON admin_sessions(token);
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_user  ON admin_sessions(user_id);
+```
+
+| Colonne | Type | Rôle |
+|---------|------|------|
+| `id` | `SERIAL PK` | Identifiant de session |
+| `user_id` | `INT NOT NULL FK` | Référence `admin_users(id)` avec `ON DELETE CASCADE` |
+| `token` | `VARCHAR(64) UNIQUE NOT NULL` | Token hexadécimal sécurisé (32 octets = 64 caractères) |
+| `created_at` | `TIMESTAMP NOT NULL DEFAULT NOW()` | Date de création de la session |
+| `expires_at` | `TIMESTAMP NOT NULL` | Date d'expiration de la session |
+| `revoked` | `BOOLEAN NOT NULL DEFAULT FALSE` | Statut de révocation (déconnexion) |
+
+### 🔒 Règle de sécurité stricte
+> ⚠️ **Chatbot public = LECTURE SEULE / ISOLATION TOTALE** :
+> L'application publique NORA (chatbot port 5000) n'a **JAMAIS** accès en écriture ni en lecture aux tables `admin_users` et `admin_sessions`. Seule l'API d'administration (`backend_admin/`, port 5001) interagit avec ces tables.
+
+### Test de suppression en cascade vérifié :
+```sql
+-- Suppression de l'admin id = 1 entraîne la suppression automatique de toutes ses sessions :
+DELETE FROM admin_users WHERE id = 1;
+SELECT count(*) FROM admin_sessions WHERE user_id = 1; -- Retourne 0
+```
+
+---
+
 ## ⏳ Tâches restantes (hors schéma)
 
 | Statut | Tâche |
@@ -200,11 +268,13 @@ SELECT count(*) FROM chat_messages WHERE session_id = '<uuid>';  -- Doit retourn
 
 ## 🔗 Fichiers liés
 
-- [`database/init.sql`](./init.sql) — Schéma modifié (ce sprint)
-- [`database/encgm_training_dataset_inserts.sql`](./encgm_training_dataset_inserts.sql) — Données (nettoyage à venir)
-- [`TASKS.md`](../TASKS.md) — Référence officielle des tâches (Section 3)
+- [`database/init.sql`](./init.sql) — Schéma complet V1 + V2 + V2.1 Admin
+- [`database/encgm_training_dataset_inserts.sql`](./encgm_training_dataset_inserts.sql) — Dataset officiel ENCGM
+- [`TASKS.md`](../TASKS.md) — Spécifications du Chatbot public
+- [`TASKS_ADMIN.md`](../TASKS_ADMIN.md) — Spécifications officielles du Back-Office Admin
 
 ---
 
 > 💡 **Rappel contrat** : Les tables `categories` et `QAs` ne changent pas de nom ni de structure.
 > Toute modification future du schéma = PR validée par Yahya ET Youssef avant merge.
+

@@ -89,13 +89,13 @@ export async function sendChatV1(msg, sessionId = null) {
 
   const { data } = await api.post('/api/chat/v1', payload)
   return {
-    reply:            data.response ?? data.reply ?? '',
-    source:           data.source   ?? 'sql',
-    version:          'v1',
-    sessionId:        data.session_id ?? sessionId ?? null,
+    reply: data.response ?? data.reply ?? '',
+    source: data.source ?? 'sql',
+    version: 'v1',
+    sessionId: data.session_id ?? sessionId ?? null,
     question_matched: data.question_matched ?? null,
-    category_id:      data.category_id     ?? null,
-    success:          data.success         ?? true,
+    category_id: data.category_id ?? null,
+    success: data.success ?? true,
   }
 }
 
@@ -121,19 +121,19 @@ export async function sendChatV2(msg, sessionId = null, signal = null) {
     const isFallback = data.source === 'v1-fallback' || !!data.fallback_reason
 
     return {
-      reply:          data.response      ?? data.reply ?? '',
-      source:         data.source        ?? (isFallback ? 'v1-fallback' : `gemini/${data.model ?? 'v2'}`),
-      version:        data.version       ?? (isFallback ? 'v1' : 'v2'),
-      sessionId:      data.session_id    ?? sessionId ?? null,
+      reply: data.response ?? data.reply ?? '',
+      source: data.source ?? (isFallback ? 'v1-fallback' : `gemini/${data.model ?? 'v2'}`),
+      version: data.version ?? (isFallback ? 'v1' : 'v2'),
+      sessionId: data.session_id ?? sessionId ?? null,
       isFallback,
       fallbackReason: data.fallback_reason ?? null,
-      sources:        Array.isArray(data.sources) ? data.sources : [],
+      sources: Array.isArray(data.sources) ? data.sources : [],
       question_matched: data.question_matched ?? null,
-      category_id:    data.category_id   ?? null,
-      context_used:   data.context_used  ?? false,
-      context_count:  data.context_count ?? 0,
-      model:          data.model         ?? 'gemini-1.5-flash',
-      success:        data.success       ?? true,
+      category_id: data.category_id ?? null,
+      context_used: data.context_used ?? false,
+      context_count: data.context_count ?? 0,
+      model: data.model ?? 'gemini-1.5-flash',
+      success: data.success ?? true,
     }
   } catch (err) {
     // Si l'utilisateur a annulé la requête -> propager l'erreur d'annulation
