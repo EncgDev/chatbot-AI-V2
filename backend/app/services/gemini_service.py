@@ -14,7 +14,8 @@ from app.models import QA, ChatMessage
 logger = logging.getLogger("NORA.GeminiService")
 
 # Timeout réseau (secondes) appliqué à l'appel Gemini — au-delà : fallback V1
-GEMINI_TIMEOUT_S = 12
+# Mesuré : gemini-2.5-flash ≈ 9-15 s avec contexte RAG → 25 s de marge
+GEMINI_TIMEOUT_S = 25
 
 
 class GeminiService:
