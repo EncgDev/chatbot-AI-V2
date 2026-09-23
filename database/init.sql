@@ -60,3 +60,30 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 CREATE INDEX IF NOT EXISTS idx_messages_session_id ON chat_messages(session_id);
   
 CREATE OR REPLACE VIEW qas AS SELECT * FROM "QAs"; 
+
+-- ============================================================
+-- SECTION 4 — Back-Office Admin (V2.1 — Soufiane)
+-- ============================================================
+
+-- ⚠️ AJOUT UNIQUEMENT — ne jamais toucher aux tables existantes
+CREATE TABLE IF NOT EXISTS admin_users (
+    id            SERIAL PRIMARY KEY,
+    email         VARCHAR(120) UNIQUE NOT NULL,
+    password_hash VARCHAR(255)  NOT NULL,
+    full_name     VARCHAR(80),
+    is_active     BOOLEAN       NOT NULL DEFAULT TRUE,
+    created_at    TIMESTAMP     NOT NULL DEFAULT NOW(),
+    last_login    TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS admin_sessions (
+    id          SERIAL PRIMARY KEY,
+    user_id     INT          NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+    token       VARCHAR(64)  NOT NULL UNIQUE,
+    created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
+    expires_at  TIMESTAMP    NOT NULL,
+    revoked     BOOLEAN      NOT NULL DEFAULT FALSE
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_token ON admin_sessions(token);
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_user  ON admin_sessions(user_id);

@@ -189,13 +189,13 @@ GET    /api/admin/health                  → { status:"ok", service:"NORA Admin
 
 | Statut | Tâche | Fichier / Livrable | Détails |
 |:------:|-------|--------------------|---------|
-| ⬜ | **Table `admin_users`** | `database/init.sql` — Section 4 | SQL exact de §2.1. Tous champs NOT NULL avec defaults explicites |
-| ⬜ | **Table `admin_sessions`** | `database/init.sql` — Section 4 | SQL exact de §2.1. FK cascade vers `admin_users` |
-| ⬜ | **2 index de performance** | `database/init.sql` | `idx_admin_sessions_token` (login lookups) + `idx_admin_sessions_user` |
-| ⬜ | **NE RIEN TOUCHER d'autre** | `database/init.sql` | `categories`, `QAs`, `chat_sessions`, `chat_messages` = intouchables |
-| ⬜ | **Test d'intégrité** | `docker compose down -v && docker compose up db` | Les 3 scripts initdb passent sans erreur dans `docker logs nora_v2_db` |
-| ⬜ | **Test cascade** | psql | `DELETE FROM admin_users WHERE id=1` → ses `admin_sessions` supprimées automatiquement |
-| ⬜ | **Script de vérification** | `database/README_BDD.md` (mise à jour) | Documenter les 2 tables + le rappel "chatbot public = lecture seule" |
+| ✅ | **Table `admin_users`** | `database/init.sql` — Section 4 | SQL exact de §2.1. Tous champs NOT NULL avec defaults explicites |
+| ✅ | **Table `admin_sessions`** | `database/init.sql` — Section 4 | SQL exact de §2.1. FK cascade vers `admin_users` |
+| ✅ | **2 index de performance** | `database/init.sql` | `idx_admin_sessions_token` (login lookups) + `idx_admin_sessions_user` |
+| ✅ | **NE RIEN TOUCHER d'autre** | `database/init.sql` | `categories`, `QAs`, `chat_sessions`, `chat_messages` = intouchables |
+| ✅ | **Test d'intégrité** | `docker compose down -v && docker compose up db` | Les 3 scripts initdb passent sans erreur dans `docker logs nora_v2_db` |
+| ✅ | **Test cascade** | psql | `DELETE FROM admin_users WHERE id=1` → ses `admin_sessions` supprimées automatiquement |
+| ✅ | **Script de vérification** | `database/README_BDD.md` (mise à jour) | Documenter les 2 tables + le rappel "chatbot public = lecture seule" |
 
 > 🔒 Le compte admin initial n'est PAS seedé en SQL : le hash est généré par le script Python de Yahya (`create_admin.py`) qui lit `ADMIN_EMAIL`/`ADMIN_PASSWORD` du `.env`.
 
