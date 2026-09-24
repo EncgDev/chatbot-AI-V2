@@ -209,34 +209,34 @@ GET    /api/admin/health                  → { status:"ok", service:"NORA Admin
 
 | Statut | Tâche | Fichier | Détails & règles |
 |:------:|-------|---------|------------------|
-| ⬜ | **`backend_admin/` squelette** | `Dockerfile`, `requirements.txt`, `config.py`, `run.py`, `app/__init__.py` | Factory pattern identique à `backend/`. Port **5001**. `requirements.txt` : Flask, Flask-SQLAlchemy, Flask-CORS, SQLAlchemy, psycopg2-binary, python-dotenv, gunicorn, requests (réutilise `scripts/embed_qas.py` via subprocess — voir Phase 3) |
-| ⬜ | **Modèles `AdminUser` / `AdminSession`** | `app/models.py` | Miroir EXACT du SQL §2.1. + `to_dict()` sans `password_hash` (JAMAIS exposé) |
-| ⬜ | **Modèles lecture `CategoryAdmin` / `QAAdmin`** | `app/models.py` | `__tablename__ = "categories"` et `__tablename__ = "QAs"` (casse exacte !) — lecture/écriture CRUD |
-| ⬜ | **Helper token** | `app/auth.py` | `secrets.token_hex(32)` (64 chars), expiration **12 h** (`expires_at = NOW() + 12h`), fonction `current_admin()` utilisée par le décorateur |
-| ⬜ | **Décorateur `@require_admin`** | `app/auth.py` | Lit `Authorization: Bearer <token>` → valide : existe, `revoked=FALSE`, `expires_at > NOW()` → sinon **401** format §2.2. Sur succès → `g.admin_user` |
-| ⬜ | **`POST /api/admin/auth/login`** | `app/routes/auth_routes.py` | `check_password_hash` (werkzeug), erreurs **génériques**, `last_login = NOW()`, purge des sessions expirées à chaque login (`DELETE ... WHERE expires_at < NOW()`), anti brute-force : 5 échecs email → **429 pendant 10 min** (compteur en mémoire `{email: (count, blocked_until)}`) |
-| ⬜ | **`POST /api/admin/auth/logout`** | `auth_routes.py` | Marque `revoked=TRUE` → `{success: true}` |
-| ⬜ | **`GET /api/admin/auth/me`** | `auth_routes.py` | Retourne `{success, user}` sinon 401 |
-| ⬜ | **Script `create_admin.py`** | `backend_admin/scripts/create_admin.py` | Lit `ADMIN_EMAIL`/`ADMIN_PASSWORD` depuis l'env → hash werkzeug → INSERT (idempotent : si email existe → met à jour le hash). Usage : `docker exec nora_v2_backend_admin python scripts/create_admin.py` |
-| ⬜ | **`GET /api/admin/health`** | `admin_health.py` | Même format que le public + `SELECT 1` |
+| ✅ | **`backend_admin/` squelette** | `Dockerfile`, `requirements.txt`, `config.py`, `run.py`, `app/__init__.py` | Factory pattern identique à `backend/`. Port **5001**. `requirements.txt` : Flask, Flask-SQLAlchemy, Flask-CORS, SQLAlchemy, psycopg2-binary, python-dotenv, gunicorn, requests (réutilise `scripts/embed_qas.py` via subprocess — voir Phase 3) |
+| ✅ | **Modèles `AdminUser` / `AdminSession`** | `app/models.py` | Miroir EXACT du SQL §2.1. + `to_dict()` sans `password_hash` (JAMAIS exposé) |
+| ✅ | **Modèles lecture `CategoryAdmin` / `QAAdmin`** | `app/models.py` | `__tablename__ = "categories"` et `__tablename__ = "QAs"` (casse exacte !) — lecture/écriture CRUD |
+| ✅ | **Helper token** | `app/auth.py` | `secrets.token_hex(32)` (64 chars), expiration **12 h** (`expires_at = NOW() + 12h`), fonction `current_admin()` utilisée par le décorateur |
+| ✅ | **Décorateur `@require_admin`** | `app/auth.py` | Lit `Authorization: Bearer <token>` → valide : existe, `revoked=FALSE`, `expires_at > NOW()` → sinon **401** format §2.2. Sur succès → `g.admin_user` |
+| ✅ | **`POST /api/admin/auth/login`** | `app/routes/auth_routes.py` | `check_password_hash` (werkzeug), erreurs **génériques**, `last_login = NOW()`, purge des sessions expirées à chaque login (`DELETE ... WHERE expires_at < NOW()`), anti brute-force : 5 échecs email → **429 pendant 10 min** (compteur en mémoire `{email: (count, blocked_until)}`) |
+| ✅ | **`POST /api/admin/auth/logout`** | `auth_routes.py` | Marque `revoked=TRUE` → `{success: true}` |
+| ✅ | **`GET /api/admin/auth/me`** | `auth_routes.py` | Retourne `{success, user}` sinon 401 |
+| ✅ | **Script `create_admin.py`** | `backend_admin/scripts/create_admin.py` | Lit `ADMIN_EMAIL`/`ADMIN_PASSWORD` depuis l'env → hash werkzeug → INSERT (idempotent : si email existe → met à jour le hash). Usage : `docker exec nora_v2_backend_admin python scripts/create_admin.py` |
+| ✅ | **`GET /api/admin/health`** | `admin_health.py` | Même format que le public + `SELECT 1` |
 
 ## Phase 2 — CRUD
 
 | Statut | Tâche | Fichier | Détails & règles |
 |:------:|-------|---------|------------------|
-| ⬜ | **CRUD Catégories** | `categories_routes.py` | 4 routes §2.3. **DELETE protégé** : `if qa_count > 0 → 409`. POST/PUT : doublon de nom (iLike exact) → 409 |
-| ⬜ | **CRUD QAs** | `qas_routes.py` | 4 routes §2.3. Validation `category_id` existe (400 sinon). `search` : `ilike` sur question+response |
-| ⬜ | **Codes HTTP stricts** | toutes routes | 200 OK / 201 créé / 400 validation / 401 non auth / 404 introuvable / 409 conflit / 429 rate-limit / 500 serveur |
+| ✅ | **CRUD Catégories** | `categories_routes.py` | 4 routes §2.3. **DELETE protégé** : `if qa_count > 0 → 409`. POST/PUT : doublon de nom (iLike exact) → 409 |
+| ✅ | **CRUD QAs** | `qas_routes.py` | 4 routes §2.3. Validation `category_id` existe (400 sinon). `search` : `ilike` sur question+response |
+| ✅ | **Codes HTTP stricts** | toutes routes | 200 OK / 201 créé / 400 validation / 401 non auth / 404 introuvable / 409 conflit / 429 rate-limit / 500 serveur |
 
 ## Phase 3 — Embeddings & Docker
 
 | Statut | Tâche | Fichier | Détails |
 |:------:|-------|---------|---------|
-| ⬜ | **`POST /api/admin/embeddings/regenerate`** | `qas_routes.py` ou `admin_health.py` | Exécute en semi-synchrone la vectorisation des QAs (même logique que `backend/scripts/embed_qas.py` — Option A Gemini, fichier `data/embeddings.json` **partagé via volume** `./backend/data` monté aussi dans `backend_admin`). Timeout généreux (120 s). Retourne `{success, count}` |
-| ⬜ | **`backend_admin/Dockerfile`** | nouveau | `python:3.10-slim`, non-root user, gunicorn, EXPOSE 5001, healthcheck curl `/api/admin/health` |
-| ⬜ | **Service compose `backend_admin`** | `docker-compose.yml` | Port `5001:5001`, env `DB_*` + `SECRET_KEY_ADMIN` + `CORS_ORIGINS_ADMIN=http://localhost:5174`, `depends_on: db: service_healthy`, volumes `./backend_admin:/app` + `./backend/data:/app/data` (partage embeddings) |
-| ⬜ | **`.env.example` mis à jour** | racine + `backend_admin/.env.example` | Ajout des 4 variables admin (valeurs vides) |
-| ⬜ | **Tests curl/Postman documentés dans la PR** | — | login (ok / mauvais mot de passe / 429), me, logout (+réutilisation du token → 401), CRUD complet, DELETE catégorie pleine → 409, regenerate |
+| ✅ | **`POST /api/admin/embeddings/regenerate`** | `qas_routes.py` ou `admin_health.py` | Exécute en semi-synchrone la vectorisation des QAs (même logique que `backend/scripts/embed_qas.py` — Option A Gemini, fichier `data/embeddings.json` **partagé via volume** `./backend/data` monté aussi dans `backend_admin`). Timeout généreux (120 s). Retourne `{success, count}` |
+| ✅ | **`backend_admin/Dockerfile`** | nouveau | `python:3.10-slim`, non-root user, gunicorn, EXPOSE 5001, healthcheck curl `/api/admin/health` |
+| ✅ | **Service compose `backend_admin`** | `docker-compose.yml` | Port `5001:5001`, env `DB_*` + `SECRET_KEY_ADMIN` + `CORS_ORIGINS_ADMIN=http://localhost:5174`, `depends_on: db: service_healthy`, volumes `./backend_admin:/app` + `./backend/data:/app/data` (partage embeddings) |
+| ✅ | **`.env.example` mis à jour** | racine + `backend_admin/.env.example` | Ajout des 4 variables admin (valeurs vides) |
+| ✅ | **Tests curl/Postman documentés dans la PR** | — | login (ok / mauvais mot de passe / 429), me, logout (+réutilisation du token → 401), CRUD complet, DELETE catégorie pleine → 409, regenerate |
 
 ---
 

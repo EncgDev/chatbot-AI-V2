@@ -82,6 +82,42 @@ services:
     networks:
       - nora_v2_network
 
+  # ─────────────────────────────────────────────
+  #  SERVICE 4 : Backend Admin Flask (Back-Office CRUD)
+  #  🔐 Même BDD partagée, API séparée sur /api/admin/*
+  # ─────────────────────────────────────────────
+  backend_admin:
+    build:
+      context: ./backend_admin
+      dockerfile: Dockerfile
+    container_name: nora_v2_backend_admin
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-nora_db}
+      DB_USER: ${POSTGRES_USER:-nora_user}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-nora_secret_password}
+      AI_API_KEY: ${AI_API_KEY:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-models/text-embedding-004}
+      SECRET_KEY_ADMIN: ${SECRET_KEY_ADMIN:-change-me-admin}
+      CORS_ORIGINS_ADMIN: ${CORS_ORIGINS_ADMIN:-http://localhost:5174}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      DATA_DIR: /app/data
+      FLASK_ENV: ${FLASK_ENV:-production}
+    ports:
+      - "5001:5001"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - nora_v2_network
+    volumes:
+      - ./backend_admin:/app
+      # Partage des embeddings avec le backend public (régénération admin)
+      - ./backend/data:/app/data
+
 # ─────────────────────────────────────────────
 #  VOLUMES & RÉSEAU
 # ─────────────────────────────────────────────

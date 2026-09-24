@@ -1,12 +1,12 @@
 """
-app/services/search_service.py â€” Moteur de recherche textuelle SQL intelligent (V1 NORA)
+app/services/search_service.py — Moteur de recherche textuelle SQL intelligent (V1 NORA)
 Auteur : Yahya
 
-Ce service rÃ©alise une recherche 100% locale dans PostgreSQL (0 API externe) :
-- TolÃ©rance universelle aux accents franÃ§ais
-- Dictionnaire sÃ©mantique de synonymes adaptÃ© Ã  l'ENCG Marrakech
-- Racinisation (stemming) pour conjugaisons, fÃ©minins et pluriels
-- Scoring contextuel diffÃ©renciant le Sujet (ex: Finance) de l'Intention (ex: DÃ©bouchÃ©s)
+Ce service réalise une recherche 100% locale dans PostgreSQL (0 API externe) :
+- Tolérance universelle aux accents français
+- Dictionnaire sémantique de synonymes adapté à l'ENCG Marrakech
+- Racinisation (stemming) pour conjugaisons, féminins et pluriels
+- Scoring contextuel différenciant le Sujet (ex: Finance) de l'Intention (ex: Débouchés)
 """
 import json
 import logging
@@ -26,12 +26,12 @@ EMBEDDING_TIMEOUT_S = 8
 SEMANTIC_THRESHOLD = 0.55        # Score cosinus minimal pour retenir une QA
 EMBEDDINGS_FILE    = Path(__file__).resolve().parents[2] / "data" / "embeddings.json"
 
-# Cache en mÃ©moire du fichier embeddings.json (chargÃ© une seule fois)
+# Cache en mémoire du fichier embeddings.json (chargé une seule fois)
 _EMBEDDINGS_CACHE: Optional[Dict[int, List[float]]] = None
 
 
 def cosine_sim(a: List[float], b: List[float]) -> float:
-    """SimilaritÃ© cosinus entre deux vecteurs (robuste aux vecteurs non normalisÃ©s)."""
+    """Similarité cosinus entre deux vecteurs (robuste aux vecteurs non normalisés)."""
     dot = sum(x * y for x, y in zip(a, b))
     na = math.sqrt(sum(x * x for x in a))
     nb = math.sqrt(sum(y * y for y in b))
@@ -42,15 +42,15 @@ def cosine_sim(a: List[float], b: List[float]) -> float:
 
 def load_embeddings_cache() -> Optional[Dict[int, List[float]]]:
     """
-    Charge data/embeddings.json (gÃ©nÃ©rÃ© par scripts/embed_qas.py) en mÃ©moire.
-    Renvoie None si le fichier est absent ou invalide â€” le repli SQL s'applique.
+    Charge data/embeddings.json (généré par scripts/embed_qas.py) en mémoire.
+    Renvoie None si le fichier est absent ou invalide — le repli SQL s'applique.
     """
     global _EMBEDDINGS_CACHE
     if _EMBEDDINGS_CACHE is not None:
         return _EMBEDDINGS_CACHE
 
     if not EMBEDDINGS_FILE.exists():
-        logger.info(f"Cache embeddings absent ({EMBEDDINGS_FILE.name}) â€” mode sÃ©mantique inactif.")
+        logger.info(f"Cache embeddings absent ({EMBEDDINGS_FILE.name}) — mode sémantique inactif.")
         return None
     try:
         with open(EMBEDDINGS_FILE, "r", encoding="utf-8") as f:
@@ -65,13 +65,13 @@ def load_embeddings_cache() -> Optional[Dict[int, List[float]]]:
 # â”€â”€â”€ 1. Mots vides franÃ§ais Ã  ignorer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 FRENCH_STOP_WORDS = {
     "le", "la", "les", "un", "une", "des", "du", "de", "d", "l",
-    "au", "aux", "a", "Ã ", "en", "dans", "par", "pour", "sur", "avec", "sans",
+    "au", "aux", "a", "à", "en", "dans", "par", "pour", "sur", "avec", "sans",
     "sous", "chez", "ce", "cet", "cette", "ces", "mon", "ton", "son",
-    "qui", "que", "quoi", "dont", "ou", "oÃ¹", "et", "mais", "donc", "or", "ni", "car",
-    "est", "sont", "suis", "es", "sommes", "etes", "Ãªtes", "avoir", "etre", "Ãªtre",
+    "qui", "que", "quoi", "dont", "ou", "où", "et", "mais", "donc", "or", "ni", "car",
+    "est", "sont", "suis", "es", "sommes", "etes", "êstes", "avoir", "etre", "être",
     "faire", "comment", "pourquoi", "quand", "quel", "quelle", "quels", "quelles",
     "je", "tu", "il", "elle", "on", "nous", "vous", "ils", "elles",
-    "svp", "bonjour", "salut", "merci", "aide", "nora", "si", "apres", "aprÃ¨s"
+    "svp", "bonjour", "salut", "merci", "aide", "nora", "si", "apres", "après"
 }
 
 # â”€â”€â”€ 2. Dictionnaire sÃ©mantique ENCG Marrakech â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -133,7 +133,7 @@ SUBJECT_SYNONYMS: Dict[str, List[str]] = {
 
 
 def normalize_text(text: str) -> str:
-    """Normalise une chaÃ®ne : minuscules, suppression des accents et de la ponctuation."""
+    """Normalise une chaîne : minuscules, suppression des accents et de la ponctuation."""
     if not text:
         return ""
     nfkd = unicodedata.normalize("NFKD", text)
@@ -143,12 +143,12 @@ def normalize_text(text: str) -> str:
 
 
 def get_stem(word: str) -> str:
-    """Extrait la racine (stem) d'un mot de plus de 4 lettres pour tolÃ©rer les flexions."""
+    """Extrait la racine (stem) d'un mot de plus de 4 lettres pour tolérer les flexions."""
     w = normalize_text(word)
     if len(w) <= 4:
         return w
-    # Troncature des terminaisons courantes franÃ§aises
-    suffixes = ("tion", "tions", "ique", "iques", "iers", "iÃ¨re", "ier",
+    # Troncature des terminaisons courantes françaises
+    suffixes = ("tion", "tions", "ique", "iques", "iers", "iere", "ier",
                 "able", "ables", "eux", "euse", "ment", "ent", "ant",
                 "er", "ir", "es", "s", "e")
     for s in suffixes:
@@ -158,19 +158,19 @@ def get_stem(word: str) -> str:
 
 
 def extract_keywords(text: str) -> List[str]:
-    """Extrait les mots significatifs normalisÃ©s."""
+    """Extrait les mots significatifs normalisés."""
     normalized = normalize_text(text)
     words = normalized.split()
     return [w for w in words if len(w) >= 3 and w not in FRENCH_STOP_WORDS]
 
 
 def detect_intents(keywords: List[str], raw_text: str) -> Set[str]:
-    """DÃ©tecte les intentions de la question de l'utilisateur."""
+    """Détecte les intentions de la question de l'utilisateur."""
     intents = set()
     norm_text = normalize_text(raw_text)
     words_set = set(norm_text.split())
 
-    # DÃ©tection par expressions clÃ©s multi-mots
+    # Détection par expressions clés multi-mots
     if "quest ce que" in norm_text or "cest quoi" in norm_text or "c est quoi" in norm_text:
         intents.add("presentation")
 
@@ -191,7 +191,7 @@ def detect_intents(keywords: List[str], raw_text: str) -> Set[str]:
 
 
 def detect_subjects(keywords: List[str], raw_text: str) -> Set[str]:
-    """DÃ©tecte les sujets / spÃ©cialitÃ©s mentionnÃ©s dans la question."""
+    """Détecte les sujets / spécialités mentionnés dans la question."""
     subjects = set()
     norm_text = normalize_text(raw_text)
     words_set = set(norm_text.split())
@@ -211,14 +211,14 @@ def detect_subjects(keywords: List[str], raw_text: str) -> Set[str]:
 
 
 class SearchService:
-    """Moteur de recherche SQL tolÃ©rant aux reformulations pour la Version 1."""
+    """Moteur de recherche SQL tolérant aux reformulations pour la Version 1."""
 
     @staticmethod
     def search_qas(query_text: str, limit: int = 5) -> List[QA]:
         """
-        Recherche multicritÃ¨re dans PostgreSQL :
-        1. RÃ©cupÃ©ration des candidats par SQL (combinaison de mots & racines)
-        2. Ã‰valuation et classement prÃ©cis par Intentions + Sujets + SimilaritÃ©
+        Recherche multicritere dans PostgreSQL :
+        1. Récupération des candidats par SQL (combinaison de mots & racines)
+        2. Évaluation et classement précis par Intentions + Sujets + Similarité
         """
         if not query_text or not query_text.strip():
             return []
@@ -344,14 +344,14 @@ class SearchService:
     @staticmethod
     def search_qas_semantic(query_text: str, limit: int = 5) -> Optional[List[QA]]:
         """
-        Recherche sÃ©mantique par embeddings Gemini (Phase C â€” Option A).
+        Recherche sémantique par embeddings Gemini (Phase C Option A).
 
-        - Vectorise la requÃªte via l'API Gemini Embeddings
-        - Classe les QAs par similaritÃ© cosinus (seuil SEMANTIC_THRESHOLD)
-        - Retourne None en cas d'indisponibilitÃ© (cache absent, clÃ© invalide,
-          quota dÃ©passÃ©, timeout) â†’ l'appelant replie sur search_qas() (SQL).
-        - Retourne une liste Ã©ventuellement vide si tout va bien mais qu'aucune
-          QA ne dÃ©passe le seuil.
+        - Vectorise la requete via l'API Gemini Embeddings
+        - Classe les QAs par similarité cosinus (seuil SEMANTIC_THRESHOLD)
+        - Retourne None en cas d'indisponibilité (cache absent, clé invalide,
+          quota dépassé, timeout) → l'appelant replie sur search_qas() (SQL).
+        - Retourne une liste éventuellement vide si tout va bien mais qu'aucune
+          QA ne dépasse le seuil.
         """
         if not query_text or not query_text.strip():
             return []
@@ -404,13 +404,13 @@ class SearchService:
 
     @staticmethod
     def get_fallback_message() -> str:
-        """Message officiel lorsque la recherche SQL ne trouve aucun rÃ©sultat."""
+        """Message officiel lorsque la recherche SQL ne trouve aucun résultat."""
         return (
-            "Je suis dÃ©solÃ©e, je n'ai pas trouvÃ© de rÃ©ponse exacte Ã  votre question dans la base de donnÃ©es de l'ENCG.\n\n"
+            "Je suis désolée, je n'ai pas trouvé de réponse exacte à votre question dans la base de données de l'ENCG.\n\n"
             "Vous pouvez contacter directement l'ENCG Marrakech :\n"
-            "ðŸ“ž TÃ©lÃ©phone : +212 5 24 30 46\n"
-            "ðŸ“§ Email : encg@uca.ac.ma\n"
-            "ðŸŒ Site web : https://www.uca.ma/encg/fr\n"
-            "ðŸ“ Adresse : Avenue Allal El Fassi, B.P. 3720 Amerchich, Marrakech"
+            "Téléphone : +212 5 24 30 46\n"
+            "Email : encg@uca.ac.ma\n"
+            "Site web : https://www.uca.ma/encg/fr\n"
+            "Adresse : Avenue Allal El Fassi, B.P. 3720 Amerchich, Marrakech"
         )
 
