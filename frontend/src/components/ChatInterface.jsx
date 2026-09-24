@@ -6,10 +6,13 @@
  *   - Par défaut : IA Gemini V2 (avec mémoire contextuelle & RAG).
  *   - En cas d'indisponibilité IA : Bascule (fallback) automatique et transparente sur la BDD.
  *
- * Consomme :
- *   GET  /api/qas?category_id=X       → suggestions cliquables
- *   POST /api/chat/v2                  → réponse IA Gemini avec mémoire + RAG + AbortSignal (+ fallback BDD)
- *   GET  /api/chat/sessions/<id>       → historique de la session
+ * Améliorations de style :
+ *   - Parseur Markdown visuel riche (gras, listes à puces, numérotations, titres, citations)
+ *   - Bouton de copie du texte avec retour visuel animé
+ *   - Horodatage discret (timestamp)
+ *   - Accordéon des sources RAG premium avec étiquettes interactives
+ *   - Fiche contact modernisée avec actions directes
+ *   - Indicateur de frappe avec halo lumineux
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
@@ -26,84 +29,382 @@ import {
   Square,
   BookOpen,
   ChevronDown,
-  Info
+  Info,
+  Copy,
+  Check,
+  Bot,
+  Globe
 } from 'lucide-react'
 import { getQAs, sendChatV2, getSessionHistory, checkHealth } from '../api/chatApi'
 import Sidebar from './Sidebar'
+
+// ─── Nettoyage des artefacts d'encodage (Mojibake) ────────────────────────────
+function sanitizeMojibake(str) {
+  if (!str || typeof str !== 'string') return ''
+  return str
+    .replace(/dÃ©solÃ©e?/gi, 'désolée')
+    .replace(/dÃ©sol/gi, 'désol')
+    .replace(/trouvÃ©/gi, 'trouvé')
+    .replace(/rÃ©ponse/gi, 'réponse')
+    .replace(/donnÃ©es/gi, 'données')
+    .replace(/TÃ©lÃ©phone/gi, 'Téléphone')
+    .replace(/sÃ©lection/gi, 'sélection')
+    .replace(/filiÃ¨re/gi, 'filière')
+    .replace(/Ã /g, 'à')
+    .replace(/Ã©/g, 'é')
+    .replace(/Ã¨/g, 'è')
+    .replace(/Ãª/g, 'ê')
+    .replace(/Ã§/g, 'ç')
+    .replace(/Ã´/g, 'ô')
+    .replace(/Ã¹/g, 'ù')
+    .replace(/Ã®/g, 'î')
+    .replace(/Ã¯/g, 'ï')
+    .replace(/Ã‰/g, 'É')
+    .replace(/Ã€/g, 'À')
+    .replace(/ðŸ["\s\w\d]{0,4}/g, '')
+}
+
+// ─── Détecteur de message 'Aucune réponse / Fallback' ─────────────────────────
+function isUnansweredResponse(text) {
+  if (!text) return true
+  const lower = text.toLowerCase()
+  return (
+    lower.includes('pas trouver') ||
+    lower.includes('pas trouvé') ||
+    lower.includes('pas trouv') ||
+    lower.includes('trouvã©') ||
+    lower.includes('pas de réponse') ||
+    lower.includes('pas de rã©ponse') ||
+    lower.includes('désolé') ||
+    lower.includes('dã©sol') ||
+    lower.includes('base de données') ||
+    lower.includes('base de donnã©es') ||
+    lower.includes('aucun résultat') ||
+    lower.includes('aucune information') ||
+    lower.includes('05 24 30 46') ||
+    lower.includes('encg@uca.ac.ma')
+  )
+}
+
+// ─── Formateur Markdown enrichi pour les messages ────────────────────────────
+function FormattedMessageContent({ content, isUser }) {
+  if (!content || typeof content !== 'string') return null
+
+  // Nettoyage préalable des artefacts d'encodage
+  const cleanContent = sanitizeMojibake(content)
+
+  // Découpage en blocs (paragraphes, listes, titres)
+  const lines = cleanContent.split('\n')
+  const elements = []
+  let currentList = []
+  let listType = null // 'ul' | 'ol'
+
+  const flushList = () => {
+    if (currentList.length > 0) {
+      if (listType === 'ol') {
+        elements.push(
+          <ol key={`ol-${elements.length}`} className="my-2 space-y-1.5 pl-1">
+            {currentList.map((item, idx) => (
+              <li key={idx} className="flex items-start gap-2.5 text-sm leading-relaxed">
+                <span className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                  isUser ? 'bg-white/20 text-white' : 'bg-[#85181A]/10 text-[#85181A]'
+                }`}>
+                  {item.num || idx + 1}
+                </span>
+                <span className="flex-1 min-w-0">{renderInline(item.text, isUser)}</span>
+              </li>
+            ))}
+          </ol>
+        )
+      } else {
+        elements.push(
+          <ul key={`ul-${elements.length}`} className="my-2 space-y-1.5 pl-1">
+            {currentList.map((item, idx) => (
+              <li key={idx} className="flex items-start gap-2.5 text-sm leading-relaxed">
+                <span className={`inline-block w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 ${
+                  isUser ? 'bg-white' : 'bg-[#85181A]'
+                }`} />
+                <span className="flex-1 min-w-0">{renderInline(item.text, isUser)}</span>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+      currentList = []
+      listType = null
+    }
+  }
+
+  lines.forEach((line, lineIdx) => {
+    const trimmed = line.trim()
+
+    // Ligne vide
+    if (!trimmed) {
+      flushList()
+      return
+    }
+
+    // Titres Markdown (###, ##, #)
+    if (trimmed.startsWith('### ')) {
+      flushList()
+      elements.push(
+        <h4 key={`h4-${lineIdx}`} className={`font-display font-bold text-sm sm:text-base mt-2.5 mb-1 ${
+          isUser ? 'text-white' : 'text-[#85181A]'
+        }`}>
+          {renderInline(trimmed.replace(/^###\s+/, ''), isUser)}
+        </h4>
+      )
+      return
+    }
+
+    if (trimmed.startsWith('## ') || trimmed.startsWith('# ')) {
+      flushList()
+      elements.push(
+        <h3 key={`h3-${lineIdx}`} className={`font-display font-bold text-base sm:text-lg mt-3 mb-1.5 pb-1 border-b ${
+          isUser ? 'text-white border-white/20' : 'text-[#85181A] border-[#85181A]/15'
+        }`}>
+          {renderInline(trimmed.replace(/^#+\s+/, ''), isUser)}
+        </h3>
+      )
+      return
+    }
+
+    // Liste numérotée (ex: 1. ou 1-)
+    const olMatch = trimmed.match(/^(\d+)[\.\)]\s+(.*)$/)
+    if (olMatch) {
+      if (listType !== 'ol') flushList()
+      listType = 'ol'
+      currentList.push({ num: olMatch[1], text: olMatch[2] })
+      return
+    }
+
+    // Liste à puces (ex: - ou * ou •)
+    const ulMatch = trimmed.match(/^[-*•]\s+(.*)$/)
+    if (ulMatch) {
+      if (listType !== 'ul') flushList()
+      listType = 'ul'
+      currentList.push({ text: ulMatch[1] })
+      return
+    }
+
+    // Paragraphe classique
+    flushList()
+    elements.push(
+      <p key={`p-${lineIdx}`} className="text-sm leading-relaxed my-1">
+        {renderInline(line, isUser)}
+      </p>
+    )
+  })
+
+  flushList()
+
+  return <div className="space-y-1">{elements}</div>
+}
+
+// ─── Formateur inline (Gras, italique, code, liens) ───────────────────────────
+function renderInline(text, isUser) {
+  if (!text) return ''
+
+  // Regex pour découper les séquences **gras**, `code`, et URLs
+  const parts = text.split(/(\*\*.*?\*\*|`.*?`|https?:\/\/[^\s]+)/g)
+
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      const boldText = part.slice(2, -2)
+      return (
+        <strong key={i} className={`font-bold ${
+          isUser ? 'text-white font-semibold' : 'text-[#85181A] font-bold'
+        }`}>
+          {boldText}
+        </strong>
+      )
+    }
+
+    if (part.startsWith('`') && part.endsWith('`')) {
+      const codeText = part.slice(1, -1)
+      return (
+        <code key={i} className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+          isUser ? 'bg-white/20 text-white' : 'bg-[#FAF5EE] text-[#85181A] border border-[#E8DDD0]'
+        }`}>
+          {codeText}
+        </code>
+      )
+    }
+
+    if (part.match(/^https?:\/\//)) {
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`underline underline-offset-2 hover:opacity-80 transition-opacity inline-flex items-center gap-0.5 ${
+            isUser ? 'text-white font-medium' : 'text-[#85181A] font-medium'
+          }`}
+        >
+          <span>{part.replace(/^https?:\/\/(www\.)?/, '')}</span>
+          <ExternalLink size={11} className="inline opacity-70" />
+        </a>
+      )
+    }
+
+    return part
+  })
+}
+
+// ─── Effet dactylographie / Machine à écrire (lettre par lettre) ──────────────
+function TypewriterFormattedContent({ content, isUser, animate = false, onScroll }) {
+  const [displayedLength, setDisplayedLength] = useState(() => (animate && !isUser ? 1 : content.length))
+  const [isDone, setIsDone] = useState(() => !animate || isUser)
+
+  useEffect(() => {
+    if (!animate || isUser || isDone) {
+      setDisplayedLength(content.length)
+      setIsDone(true)
+      return
+    }
+
+    if (displayedLength >= content.length) {
+      setIsDone(true)
+      return
+    }
+
+    // Vitesse dynamique d'écriture fluide caractère par caractère
+    const chunk = content.length > 400 ? 3 : content.length > 150 ? 2 : 1
+    const timer = setTimeout(() => {
+      setDisplayedLength((prev) => {
+        const next = Math.min(content.length, prev + chunk)
+        if (next >= content.length) {
+          setIsDone(true)
+        }
+        return next
+      })
+      if (onScroll) onScroll()
+    }, 15)
+
+    return () => clearTimeout(timer)
+  }, [content, displayedLength, animate, isUser, isDone, onScroll])
+
+  const visibleText = content.slice(0, displayedLength)
+
+  return (
+    <div className="relative">
+      <FormattedMessageContent content={visibleText} isUser={isUser} />
+      {!isDone && (
+        <span className="inline-block w-1.5 h-3.5 bg-[#85181A] ml-0.5 animate-pulse align-middle rounded-xs" />
+      )}
+    </div>
+  )
+}
 
 // ─── Bulle de message enrichie ───────────────────────────────────────────────
 function MessageBubble({
   msg,
   isLastNora,
   isLoading,
-  onRegenerate
+  onRegenerate,
+  onScroll
 }) {
   const isUser = msg.role === 'user'
   const isSystemNotice = msg.isSystemNotice
   const [showSources, setShowSources] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  // Détection si c'est un message de non-réponse / contact
+  const isContactCard =
+    msg.showContactCard ||
+    (!isUser && isUnansweredResponse(msg.content))
+
+  // Texte propre à afficher (remplace le texte brut doublon en cas de contact card)
+  const displayContent = isContactCard
+    ? `Je n'ai pas trouvé de réponse exacte à votre question dans la base de données de l'ENCG.\n\nVous pouvez contacter directement les services de l'ENCG Marrakech :`
+    : msg.content
+
+  // Formatage de l'heure du message (timestamp)
+  const timeString = msg.timestamp
+    ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+  // Action copier le texte
+  const handleCopy = () => {
+    if (!displayContent) return
+    navigator.clipboard?.writeText(displayContent).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   // Message système discret (ex: "Requête annulée.")
   if (isSystemNotice) {
     return (
       <motion.div
-        className="flex justify-center my-1"
+        className="flex justify-center my-1.5"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.25 }}
       >
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF5EE] border border-[#E8DDD0] text-xs font-sans text-[#707070] shadow-2xs">
-          <Info size={13} className="text-[#85181A]/60" />
+        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF5EE] border border-[#E8DDD0] text-xs font-sans text-[#707070] shadow-2xs">
+          <Info size={13} className="text-[#85181A]/70" />
           <span>{msg.content}</span>
         </div>
       </motion.div>
     )
   }
 
-  // Détection si le message contient des informations de contact / fallback
-  const isContactCard =
-    msg.showContactCard ||
-    (typeof msg.content === 'string' &&
-      (msg.content.includes('05 24 30 46 92') || msg.content.includes('encg@uca.ac.ma')))
-
   return (
     <motion.div
-      className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+      className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'} group`}
       initial={{ opacity: 0, y: 16, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
     >
       {/* Avatar bulle NORA */}
       {!isUser && (
-        <div className="w-8 h-8 rounded-full overflow-hidden bg-[#FAF5EE] border border-[#E4D6C4] flex items-center justify-center flex-shrink-0 shadow-xs mt-1">
+        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-[#FAF5EE] to-[#EFE7D8] border border-[#E4D6C4] flex items-center justify-center flex-shrink-0 shadow-xs mt-1 ring-2 ring-[#85181A]/10">
           <img
             src="/nora_robot_clean.png"
             alt="Nora"
             className="w-6 h-6 object-contain"
           />
+          <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-[#10B981] ring-1 ring-white" />
         </div>
       )}
 
       <div className={`max-w-[88%] sm:max-w-[78%] flex flex-col gap-1.5 ${isUser ? 'items-end' : 'items-start'}`}>
+        {/* En-tête de bulle avec rôle et heure */}
+        <div className={`flex items-center gap-2 px-1 text-[11px] font-sans ${isUser ? 'flex-row-reverse text-[#85181A]/70' : 'text-[#6B4035]/70'}`}>
+          <span className="font-semibold">{isUser ? 'Vous' : 'NORA'}</span>
+          <span className="text-[10px] opacity-60">{timeString}</span>
+        </div>
+
         {/* Bulle de contenu principal */}
         <div
-          className={`px-4 py-3 rounded-2xl text-sm font-sans leading-relaxed whitespace-pre-wrap ${
+          className={`relative px-4 py-3 rounded-2xl text-sm font-sans leading-relaxed transition-all duration-200 ${
             isUser
-              ? 'bg-[#85181A] text-white rounded-br-sm shadow-sm'
-              : 'bg-white border border-[#E8DDD0] text-[#1A1A1A] rounded-bl-sm shadow-card'
+              ? 'bg-gradient-to-br from-[#85181A] via-[#781416] to-[#600E10] text-white rounded-br-sm shadow-md'
+              : 'bg-white border border-[#E8DDD0] text-[#2D1F17] rounded-bl-sm shadow-card hover:shadow-card-hover'
           }`}
         >
-          {msg.content}
+          {/* Contenu avec effet dactylographie lettre par lettre */}
+          <TypewriterFormattedContent
+            content={displayContent}
+            isUser={isUser}
+            animate={msg.isNew}
+            onScroll={onScroll}
+          />
 
           {/* ── Accordéon des Sources RAG ─────────────────────────── */}
           {msg.sources && Array.isArray(msg.sources) && msg.sources.length > 0 && (
             <div className="mt-3 pt-2.5 border-t border-[#E8DDD0]/80">
               <button
                 onClick={() => setShowSources((prev) => !prev)}
-                className="flex items-center gap-1.5 text-xs font-sans font-semibold text-[#85181A] hover:text-[#A02022] transition-colors py-0.5 focus:outline-none"
+                className="flex items-center justify-between w-full text-xs font-sans font-semibold text-[#85181A] hover:text-[#A02022] transition-colors py-1 px-2 rounded-lg bg-[#FAF5EE] border border-[#E8DDD0]/70 focus:outline-none"
                 aria-expanded={showSources}
               >
-                <BookOpen size={13} />
-                <span>NORA s'est appuyée sur {msg.sources.length} question{msg.sources.length > 1 ? 's' : ''} fréquente{msg.sources.length > 1 ? 's' : ''}</span>
+                <div className="flex items-center gap-1.5">
+                  <BookOpen size={13} className="text-[#85181A]" />
+                  <span>Sources de référence ({msg.sources.length})</span>
+                </div>
                 <motion.div
                   animate={{ rotate: showSources ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
@@ -124,10 +425,12 @@ function MessageBubble({
                     {msg.sources.map((src, idx) => (
                       <div
                         key={src.id || idx}
-                        className="text-[11px] font-sans text-[#503225] bg-[#FAF5EE] border border-[#E8DDD0]/80 px-2.5 py-1.5 rounded-lg flex items-start gap-1.5"
+                        className="text-[11px] font-sans text-[#503225] bg-[#FAF7F2] border border-[#E8DDD0] px-3 py-2 rounded-xl flex items-start gap-2 shadow-2xs"
                       >
-                        <span className="text-[#85181A] font-bold">Q :</span>
-                        <span>{src.question || (typeof src === 'string' ? src : 'Document de référence')}</span>
+                        <span className="w-4 h-4 rounded-full bg-[#85181A]/10 text-[#85181A] flex items-center justify-center font-bold text-[9px] flex-shrink-0 mt-0.5">
+                          {idx + 1}
+                        </span>
+                        <span className="leading-snug">{src.question || (typeof src === 'string' ? src : 'Document institutionnel')}</span>
                       </div>
                     ))}
                   </motion.div>
@@ -138,55 +441,106 @@ function MessageBubble({
 
           {/* Carte interactive des coordonnées ENCG */}
           {isContactCard && (
-            <div className="mt-3 pt-3 border-t border-[#E8DDD0] flex flex-col gap-2 bg-[#FAF7F2] p-3 rounded-xl">
-              <span className="font-sans font-bold text-xs text-[#85181A] uppercase tracking-wider">
+            <div className="mt-3 pt-3 border-t border-[#E8DDD0] flex flex-col gap-2.5 bg-gradient-to-br from-[#FAF7F2] to-[#F5ECE0] p-3.5 rounded-xl border border-[#E8DDD0]/80">
+              <span className="font-sans font-bold text-xs text-[#85181A] uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles size={13} />
                 Contact & Administration ENCG Marrakech
               </span>
 
-              {/* Téléphone */}
-              <a
-                href="tel:0524304692"
-                className="flex items-center gap-2 text-xs font-sans text-[#1A1A1A] hover:text-[#85181A] transition-colors p-1.5 rounded-lg hover:bg-white"
-              >
-                <div className="w-6 h-6 rounded-full bg-[#85181A]/10 text-[#85181A] flex items-center justify-center flex-shrink-0">
-                  <Phone size={13} />
-                </div>
-                <span><strong>Tél :</strong> 05 24 30 46 92</span>
-              </a>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                {/* Téléphone */}
+                <a
+                  href="tel:0524304692"
+                  className="flex items-center gap-2 text-xs font-sans text-[#1A1A1A] hover:text-[#85181A] transition-colors p-2 rounded-lg bg-white/80 border border-[#E8DDD0] hover:bg-white hover:shadow-2xs"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-[#85181A]/10 text-[#85181A] flex items-center justify-center flex-shrink-0">
+                    <Phone size={13} />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[10px] text-[#707070]">Téléphone</span>
+                    <span className="font-semibold truncate">05 24 30 46 92</span>
+                  </div>
+                </a>
 
-              {/* Email */}
-              <a
-                href="mailto:encg@uca.ac.ma"
-                className="flex items-center gap-2 text-xs font-sans text-[#1A1A1A] hover:text-[#85181A] transition-colors p-1.5 rounded-lg hover:bg-white"
-              >
-                <div className="w-6 h-6 rounded-full bg-[#85181A]/10 text-[#85181A] flex items-center justify-center flex-shrink-0">
-                  <Mail size={13} />
-                </div>
-                <span><strong>Email :</strong> encg@uca.ac.ma</span>
-              </a>
+                {/* Email */}
+                <a
+                  href="mailto:encg@uca.ac.ma"
+                  className="flex items-center gap-2 text-xs font-sans text-[#1A1A1A] hover:text-[#85181A] transition-colors p-2 rounded-lg bg-white/80 border border-[#E8DDD0] hover:bg-white hover:shadow-2xs"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-[#85181A]/10 text-[#85181A] flex items-center justify-center flex-shrink-0">
+                    <Mail size={13} />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[10px] text-[#707070]">Email officiel</span>
+                    <span className="font-semibold truncate">encg@uca.ac.ma</span>
+                  </div>
+                </a>
 
-              {/* Adresse */}
-              <a
-                href="https://www.google.com/search?sca_esv=a32034c9d82639b0&sxsrf=APpeQntcpealz23IV8otmykwn0yHBGIW1A:1789124112052&q=national+school+of+commerce+and+management+of+marrakech+address&ludocid=2651658281646063652&sa=X&sqi=2&ved=2ahUKEwjjtaHZruaWAxXJUKQEHVfhI4oQ6BN6BAg1EAI"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-xs font-sans text-[#1A1A1A] hover:text-[#85181A] transition-colors p-1.5 rounded-lg hover:bg-white"
-              >
-                <div className="w-6 h-6 rounded-full bg-[#85181A]/10 text-[#85181A] flex items-center justify-center flex-shrink-0">
-                  <MapPin size={13} />
-                </div>
-                <div className="flex items-center gap-1 min-w-0">
-                  <span className="truncate"><strong>Adresse :</strong> MX2X+J8P, Bd Allal Al Fassi, Marrakech 40000</span>
-                  <ExternalLink size={12} className="flex-shrink-0 opacity-60" />
-                </div>
-              </a>
+                {/* Site Web */}
+                <a
+                  href="https://www.uca.ma/encg/fr"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-xs font-sans text-[#1A1A1A] hover:text-[#85181A] transition-colors p-2 rounded-lg bg-white/80 border border-[#E8DDD0] hover:bg-white hover:shadow-2xs"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-[#85181A]/10 text-[#85181A] flex items-center justify-center flex-shrink-0">
+                    <Globe size={13} />
+                  </div>
+                  <div className="flex items-center justify-between flex-1 min-w-0">
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[10px] text-[#707070]">Site web</span>
+                      <span className="font-semibold truncate">uca.ma/encg/fr</span>
+                    </div>
+                    <ExternalLink size={12} className="flex-shrink-0 opacity-60 ml-1 text-[#85181A]" />
+                  </div>
+                </a>
+
+                {/* Adresse */}
+                <a
+                  href="https://www.google.com/search?q=national+school+of+commerce+and+management+of+marrakech+address"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-xs font-sans text-[#1A1A1A] hover:text-[#85181A] transition-colors p-2 rounded-lg bg-white/80 border border-[#E8DDD0] hover:bg-white hover:shadow-2xs"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-[#85181A]/10 text-[#85181A] flex items-center justify-center flex-shrink-0">
+                    <MapPin size={13} />
+                  </div>
+                  <div className="flex items-center justify-between flex-1 min-w-0">
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[10px] text-[#707070]">Campus</span>
+                      <span className="font-semibold truncate">Bd Allal Al Fassi</span>
+                    </div>
+                    <ExternalLink size={12} className="flex-shrink-0 opacity-60 ml-1 text-[#85181A]" />
+                  </div>
+                </a>
+              </div>
             </div>
           )}
         </div>
 
-        {/* ── Bas de bulle : Badge fallback & Bouton Régénérer ── */}
+        {/* ── Actions sous la bulle : Copier, Badge fallback & Régénérer ── */}
         {!isUser && (
           <div className="flex items-center gap-2 px-1">
+            {/* Bouton Copier le texte */}
+            <button
+              onClick={handleCopy}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-[#FAF5EE] text-[11px] font-sans text-[#707070] hover:text-[#85181A] transition-colors border border-transparent hover:border-[#E8DDD0]"
+              title="Copier le message"
+              aria-label="Copier le message"
+            >
+              {copied ? (
+                <>
+                  <Check size={12} className="text-[#10B981]" />
+                  <span className="text-[#10B981] font-medium">Copié !</span>
+                </>
+              ) : (
+                <>
+                  <Copy size={12} />
+                  <span>Copier</span>
+                </>
+              )}
+            </button>
+
             {/* Badge Mode économisé (fallback discret) */}
             {msg.isFallback && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FAF5EE] border border-[#E8DDD0] text-[10px] font-sans text-[#707070]">
@@ -198,7 +552,7 @@ function MessageBubble({
             {isLastNora && !isLoading && onRegenerate && (
               <button
                 onClick={onRegenerate}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-[#FAF5EE] text-[11px] font-sans text-[#707070] hover:text-[#85181A] transition-colors"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-[#FAF5EE] text-[11px] font-sans text-[#707070] hover:text-[#85181A] transition-colors border border-transparent hover:border-[#E8DDD0]"
                 title="Régénérer cette réponse"
               >
                 <RotateCcw size={12} />
@@ -222,7 +576,7 @@ function TypingIndicator() {
       exit={{ opacity: 0, y: 8, scale: 0.95 }}
       transition={{ duration: 0.25, ease: 'easeOut' }}
     >
-      <div className="w-8 h-8 rounded-full overflow-hidden bg-[#FAF5EE] border border-[#E4D6C4] flex items-center justify-center flex-shrink-0 shadow-xs mb-0.5">
+      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#FAF5EE] border border-[#E4D6C4] flex items-center justify-center flex-shrink-0 shadow-xs mb-0.5 ring-2 ring-[#85181A]/20">
         <img
           src="/nora_robot_clean.png"
           alt="Nora"
@@ -230,24 +584,27 @@ function TypingIndicator() {
         />
       </div>
 
-      <div className="bg-white border border-[#E8DDD0] rounded-2xl rounded-bl-sm px-4 py-3 shadow-card flex items-center gap-1.5 min-h-[38px]">
-        {[0, 1, 2].map((i) => (
-          <motion.span
-            key={i}
-            className="w-2.5 h-2.5 rounded-full bg-[#85181A]"
-            animate={{
-              y: [0, -6, 0],
-              opacity: [0.35, 1, 0.35],
-              scale: [0.8, 1.2, 0.8],
-            }}
-            transition={{
-              duration: 0.7,
-              repeat: Infinity,
-              delay: i * 0.16,
-              ease: 'easeInOut',
-            }}
-          />
-        ))}
+      <div className="bg-white border border-[#E8DDD0] rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-card flex items-center gap-3 min-h-[40px]">
+        <div className="flex items-center gap-1.5">
+          {[0, 1, 2].map((i) => (
+            <motion.span
+              key={i}
+              className="w-2 h-2 rounded-full bg-[#85181A]"
+              animate={{
+                y: [0, -5, 0],
+                opacity: [0.4, 1, 0.4],
+                scale: [0.85, 1.15, 0.85],
+              }}
+              transition={{
+                duration: 0.7,
+                repeat: Infinity,
+                delay: i * 0.15,
+                ease: 'easeInOut',
+              }}
+            />
+          ))}
+        </div>
+        <span className="text-xs font-sans text-[#85181A] font-medium">NORA rédige sa réponse…</span>
       </div>
     </motion.div>
   )
@@ -302,6 +659,7 @@ export default function ChatInterface({ category, onBack }) {
               content: item.content,
               version: item.version,
               sources: item.sources || [],
+              timestamp: item.created_at || Date.now(),
             }))
             setMessages(restored)
             return
@@ -316,6 +674,7 @@ export default function ChatInterface({ category, onBack }) {
         const welcome = {
           id: 'welcome',
           role: 'nora',
+          timestamp: Date.now(),
           content: category
             ? `Bonjour ! Je suis NORA, votre assistante ENCG 😊\nJe suis prête à répondre à vos questions sur **${category.name}**.\n\nSélectionnez une question ci-dessous ou écrivez directement votre message !`
             : 'Bonjour ! Je suis NORA, votre assistante ENCG 😊\nComment puis-je vous aider ?\n\nSélectionnez une question ci-dessous ou écrivez directement votre message !',
@@ -376,7 +735,12 @@ export default function ChatInterface({ category, onBack }) {
 
       // Si ce n'est pas une régénération, on ajoute la bulle utilisateur
       if (!replaceLastNora) {
-        const userMsg = { id: `user-${Date.now()}`, role: 'user', content: trimmed }
+        const userMsg = {
+          id: `user-${Date.now()}`,
+          role: 'user',
+          content: trimmed,
+          timestamp: Date.now(),
+        }
         setMessages((prev) => [...prev, userMsg])
         setInput('')
       } else {
@@ -412,24 +776,22 @@ export default function ChatInterface({ category, onBack }) {
         }
 
         const replyText = res.reply?.trim() || ''
-        const isUnanswered =
-          !replyText ||
-          replyText.toLowerCase().includes('pas trouver') ||
-          replyText.toLowerCase().includes('pas de réponse') ||
-          replyText.toLowerCase().includes('désolé')
+        const isUnanswered = isUnansweredResponse(replyText)
 
         const noraMsg = {
           id: `nora-${Date.now()}`,
           role: 'nora',
+          timestamp: Date.now(),
           content: isUnanswered
-            ? `Je n'ai pas trouvé de réponse précise à votre demande dans la base actuelle.\n\nVous pouvez contacter directement les services de l'ENCG Marrakech :`
+            ? `Je n'ai pas trouvé de réponse exacte à votre question dans la base de données de l'ENCG.\n\nVous pouvez contacter directement les services de l'ENCG Marrakech :`
             : replyText,
           source: res.source,
           version: res.version,
-          isFallback: res.isFallback,
+          isFallback: isUnanswered || res.isFallback,
           fallbackReason: res.fallbackReason,
           sources: res.sources || [],
           showContactCard: isUnanswered,
+          isNew: true,
         }
 
         setMessages((prev) => [...prev, noraMsg])
@@ -442,8 +804,10 @@ export default function ChatInterface({ category, onBack }) {
         const errMsg = {
           id: `err-${Date.now()}`,
           role: 'nora',
+          timestamp: Date.now(),
           content: `⚠️ Une erreur s'est produite lors du traitement de votre demande.\n\nVous pouvez joindre directement l'administration de l'ENCG Marrakech :`,
           showContactCard: true,
+          isNew: true,
         }
         setMessages((prev) => [...prev, errMsg])
         setIsOnline(false)
@@ -642,6 +1006,7 @@ export default function ChatInterface({ category, onBack }) {
               isLastNora={msg.id === lastNoraMsgId}
               isLoading={isLoading}
               onRegenerate={handleRegenerate}
+              onScroll={scrollToBottom}
             />
           ))}
 
