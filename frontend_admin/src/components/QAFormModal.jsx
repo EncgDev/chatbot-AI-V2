@@ -1,143 +1,150 @@
 /**
- * QAFormModal.jsx — Création / Édition QA — Design premium
+ * QAFormModal.jsx — Modal création/édition QA
+ * Champs : question, réponse (textarea), catégorie
  */
 import { useState, useEffect } from 'react'
-import { X, Save, Plus, FileText, MessageSquare, Tag } from 'lucide-react'
+import { Loader2, X, MessageSquare, Send } from 'lucide-react'
 
-const EMPTY = { question: '', response: '', category_id: '' }
-
-export default function QAFormModal({ isOpen, onClose, onSubmit, initialData, categories, loading }) {
-  const [form, setForm]   = useState(EMPTY)
+export default function QAFormModal({ isOpen, onClose, onSubmit, editData, categories, loading }) {
+  const [form, setForm]   = useState({ question: '', response: '', category_id: '' })
   const [errors, setErrors] = useState({})
-  const isEdit = !!initialData
-
-  // Fermeture avec la touche Échap (sauf pendant un envoi)
-  useEffect(() => {
-    if (!isOpen) return
-    const onKey = e => { if (e.key === 'Escape' && !loading) onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [isOpen, loading, onClose])
 
   useEffect(() => {
     if (isOpen) {
-      setForm(initialData ? {
-        question: initialData.question ?? '',
-        response: initialData.response ?? '',
-        category_id: initialData.category_id ?? '',
-      } : EMPTY)
+      setForm({
+        question:    editData?.question    ?? '',
+        response:    editData?.response    ?? '',
+        category_id: editData?.category_id != null ? String(editData.category_id) : '',
+      })
       setErrors({})
     }
-  }, [isOpen, initialData])
+  }, [isOpen, editData])
+
+  /* ESC to close */
+  useEffect(() => {
+    if (!isOpen) return
+    const fn = e => { if (e.key === 'Escape' && !loading) onClose() }
+    window.addEventListener('keydown', fn)
+    return () => window.removeEventListener('keydown', fn)
+  }, [isOpen, loading, onClose])
 
   const validate = () => {
-    const e = {}
-    if (!form.question.trim()) e.question = 'La question est requise.'
-    if (!form.response.trim()) e.response = 'La réponse est requise.'
-    if (!form.category_id) e.category_id = 'Sélectionnez une catégorie.'
-    setErrors(e)
-    return Object.keys(e).length === 0
+    const errs = {}
+    if (!form.question.trim()) errs.question = 'La question est requise.'
+    if (!form.response.trim()) errs.response = 'La réponse est requise.'
+    if (!form.category_id)     errs.category_id = 'Sélectionnez une catégorie.'
+    setErrors(errs)
+    return Object.keys(errs).length === 0
   }
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault()
     if (!validate()) return
-    onSubmit({ ...form, category_id: Number(form.category_id) })
+    await onSubmit({
+      question:    form.question.trim(),
+      response:    form.response.trim(),
+      category_id: Number(form.category_id),
+    })
+  }
+
+  const set = (k, v) => {
+    setForm(f => ({ ...f, [k]: v }))
+    if (errors[k]) setErrors(e => ({ ...e, [k]: undefined }))
   }
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
-      role="dialog" aria-modal="true"
-      style={{ background: 'rgba(61,39,29,.5)', backdropFilter: 'blur(6px)' }}
-      onClick={e => { if (e.target === e.currentTarget && !loading) onClose() }}>
+  const isEdit = !!editData
 
-      <div className="bg-white rounded-2xl w-full max-w-2xl flex flex-col animate-scale-in"
-        style={{ border: '1px solid var(--border)', boxShadow: 'var(--shadow-xl)', maxHeight: '92vh' }}>
+  return (
+    <div className="modal-overlay" role="dialog" aria-modal="true"
+      aria-labelledby="qa-modal-title"
+      onClick={e => { if (e.target === e.currentTarget && !loading) onClose() }}>
+      <div className="modal-box w-full max-w-xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 shrink-0"
-          style={{ borderBottom: '1px solid var(--border)' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: isEdit ? 'rgba(200,90,50,.1)' : 'rgba(133,24,26,.08)' }}>
-              {isEdit
-                ? <Save size={16} style={{ color: 'var(--terracotta)' }} />
-                : <Plus size={16} style={{ color: 'var(--bordeaux)' }} />
-              }
-            </div>
-            <div>
-              <h2 className="font-semibold text-sm" style={{ color: 'var(--brown)' }}>
-                {isEdit ? 'Modifier le QA' : 'Nouveau QA'}
-              </h2>
-              <p className="text-xs" style={{ color: 'var(--brown-muted)' }}>
-                {isEdit ? 'Modifiez les champs puis enregistrez' : 'Remplissez les champs ci-dessous'}
-              </p>
-            </div>
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'var(--brand-soft)' }}>
+            <MessageSquare size={18} style={{ color: 'var(--brand)' }} />
+          </div>
+          <div className="flex-1">
+            <h2 id="qa-modal-title" className="text-base font-bold text-gray-900">
+              {isEdit ? 'Modifier le QA' : 'Nouveau QA'}
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {isEdit ? `Édition du QA #${editData.id}` : 'Créer une nouvelle entrée dans la base NORA'}
+            </p>
           </div>
           <button onClick={onClose} disabled={loading}
-            className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-gray-100 transition-colors disabled:opacity-50"
-            style={{ color: 'var(--brown-muted)' }}>
-            <X size={15} />
+            className="btn btn-ghost btn-icon w-8 h-8 rounded-lg"
+            aria-label="Fermer">
+            <X size={16} />
           </button>
         </div>
 
-        {/* Formulaire */}
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="px-6 py-5 flex flex-col gap-5 overflow-y-auto flex-1">
+        {/* Form */}
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="px-6 py-5 space-y-5 overflow-y-auto max-h-[60vh]">
 
             {/* Question */}
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest mb-2"
-                style={{ color: 'var(--brown-muted)' }}>
-                <MessageSquare size={11} />
-                Question <span style={{ color: 'var(--danger)' }}>*</span>
+              <label htmlFor="qa-question"
+                className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
+                Question <span style={{ color: 'var(--brand)' }}>*</span>
               </label>
-              <textarea rows={3}
-                placeholder="Saisissez la question de l'utilisateur…"
-                className={`input-base resize-none ${errors.question ? 'error' : ''}`}
+              <input
+                id="qa-question"
+                type="text"
                 value={form.question}
-                onChange={e => setForm(f => ({ ...f, question: e.target.value }))}
+                onChange={e => set('question', e.target.value)}
+                placeholder="Ex: Quel est le processus d'admission à l'ENCG ?"
+                className={`input-base ${errors.question ? 'error' : ''}`}
+                disabled={loading}
+                autoFocus
               />
               {errors.question && (
-                <p className="mt-1.5 text-xs font-medium" style={{ color: 'var(--danger)' }}>
-                  ⚠ {errors.question}
-                </p>
+                <p className="text-xs text-red-600 font-medium mt-1.5">⚠ {errors.question}</p>
               )}
             </div>
 
-            {/* Réponse */}
+            {/* Response */}
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest mb-2"
-                style={{ color: 'var(--brown-muted)' }}>
-                <FileText size={11} />
-                Réponse <span style={{ color: 'var(--danger)' }}>*</span>
+              <label htmlFor="qa-response"
+                className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
+                Réponse <span style={{ color: 'var(--brand)' }}>*</span>
               </label>
-              <textarea rows={6}
-                placeholder="Saisissez la réponse complète de NORA…"
-                className={`input-base resize-none ${errors.response ? 'error' : ''}`}
+              <textarea
+                id="qa-response"
                 value={form.response}
-                onChange={e => setForm(f => ({ ...f, response: e.target.value }))}
+                onChange={e => set('response', e.target.value)}
+                placeholder="Rédigez une réponse claire et complète…"
+                rows={5}
+                className={`input-base resize-y ${errors.response ? 'error' : ''}`}
+                style={{ minHeight: 110 }}
+                disabled={loading}
               />
               {errors.response && (
-                <p className="mt-1.5 text-xs font-medium" style={{ color: 'var(--danger)' }}>
-                  ⚠ {errors.response}
-                </p>
+                <p className="text-xs text-red-600 font-medium mt-1.5">⚠ {errors.response}</p>
               )}
+              <p className="text-[11px] text-gray-400 mt-1.5">
+                {form.response.length} caractère{form.response.length !== 1 ? 's' : ''} · Plus la réponse est détaillée, meilleure sera la précision de l'IA.
+              </p>
             </div>
 
-            {/* Catégorie */}
+            {/* Category */}
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest mb-2"
-                style={{ color: 'var(--brown-muted)' }}>
-                <Tag size={11} />
-                Catégorie <span style={{ color: 'var(--danger)' }}>*</span>
+              <label htmlFor="qa-category"
+                className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
+                Catégorie <span style={{ color: 'var(--brand)' }}>*</span>
               </label>
               <select
-                className={`input-base ${errors.category_id ? 'error' : ''}`}
+                id="qa-category"
                 value={form.category_id}
-                onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))}
+                onChange={e => set('category_id', e.target.value)}
+                className={`input-base ${errors.category_id ? 'error' : ''}`}
+                style={{ height: 42 }}
+                disabled={loading}
               >
                 <option value="">— Sélectionner une catégorie —</option>
                 {categories.map(c => (
@@ -145,23 +152,21 @@ export default function QAFormModal({ isOpen, onClose, onSubmit, initialData, ca
                 ))}
               </select>
               {errors.category_id && (
-                <p className="mt-1.5 text-xs font-medium" style={{ color: 'var(--danger)' }}>
-                  ⚠ {errors.category_id}
-                </p>
+                <p className="text-xs text-red-600 font-medium mt-1.5">⚠ {errors.category_id}</p>
               )}
             </div>
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 px-6 py-4 shrink-0"
-            style={{ borderTop: '1px solid var(--border)', background: 'var(--cream)' }}>
-            <button type="button" onClick={onClose} disabled={loading} className="btn-secondary">
+          <div className="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-gray-100 bg-gray-50/60">
+            <button type="button" onClick={onClose} disabled={loading}
+              className="btn btn-secondary">
               Annuler
             </button>
-            <button type="submit" disabled={loading} className="btn-primary">
-              {isEdit
-                ? loading ? 'Enregistrement…' : <><Save size={14} /> Enregistrer</>
-                : loading ? 'Création…'         : <><Plus size={14} /> Créer le QA</>
+            <button type="submit" disabled={loading} className="btn btn-primary">
+              {loading
+                ? <><Loader2 size={14} className="animate-spin-slow" /> Enregistrement…</>
+                : <><Send size={14} /> {isEdit ? 'Mettre à jour' : 'Créer le QA'}</>
               }
             </button>
           </div>

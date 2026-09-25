@@ -14,6 +14,7 @@ import {
 
 import DashboardLayout from './components/DashboardLayout'
 import LoginPage       from './pages/LoginPage'
+import DashboardPage   from './pages/DashboardPage'
 import CategoriesPage  from './pages/CategoriesPage'
 import QAsPage         from './pages/QAsPage'
 import ToastContainer, { showToast } from './components/Toast'
@@ -59,8 +60,8 @@ function ProtectedApp() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--cream)' }}>
-        <Loader2 size={32} className="animate-spin" style={{ color: 'var(--bordeaux)' }} />
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-app)]">
+        <Loader2 size={32} className="animate-spin text-[var(--bordeaux)]" />
       </div>
     )
   }
@@ -73,10 +74,22 @@ function ProtectedApp() {
       regenLoading={regenLoading}
     >
       <Routes>
-        <Route path="/"            element={<Navigate to="/categories" replace />} />
+        <Route
+          path="/"
+          element={
+            <DashboardPage
+              user={user}
+              onQAChange={handleQAChange}
+              onRegenerate={handleRegenerate}
+              regenLoading={regenLoading}
+              pendingEmbeddings={pendingEmbeddings}
+            />
+          }
+        />
+        <Route path="/dashboard"   element={<Navigate to="/" replace />} />
         <Route path="/categories"  element={<CategoriesPage onQAChange={handleQAChange} />} />
         <Route path="/qas"         element={<QAsPage onQAChange={handleQAChange} />} />
-        <Route path="*"            element={<Navigate to="/categories" replace />} />
+        <Route path="*"            element={<Navigate to="/" replace />} />
       </Routes>
     </DashboardLayout>
   )

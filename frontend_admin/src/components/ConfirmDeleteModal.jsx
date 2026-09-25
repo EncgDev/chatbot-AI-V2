@@ -1,70 +1,61 @@
 /**
- * ConfirmDeleteModal.jsx — Confirmation suppression — Design premium
+ * ConfirmDeleteModal.jsx — Modal de confirmation de suppression
  */
 import { useEffect } from 'react'
-import { X, Trash2, AlertTriangle } from 'lucide-react'
+import { Loader2, Trash2, X, AlertTriangle } from 'lucide-react'
 
-export default function ConfirmDeleteModal({ isOpen, onClose, onConfirm, title, description, loading }) {
-  // Fermeture avec la touche Échap (sauf pendant une suppression)
+export default function ConfirmDeleteModal({
+  isOpen, onClose, onConfirm, loading,
+  title = 'Confirmer la suppression',
+  description = 'Cette action est irréversible. Souhaitez-vous continuer ?'
+}) {
   useEffect(() => {
     if (!isOpen) return
-    const onKey = e => { if (e.key === 'Escape' && !loading) onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    const fn = e => { if (e.key === 'Escape' && !loading) onClose() }
+    window.addEventListener('keydown', fn)
+    return () => window.removeEventListener('keydown', fn)
   }, [isOpen, loading, onClose])
 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
-      role="alertdialog" aria-modal="true" aria-label={title ?? 'Confirmation de suppression'}
-      style={{ background: 'rgba(61,39,29,.5)', backdropFilter: 'blur(6px)' }}
+    <div className="modal-overlay" role="alertdialog" aria-modal="true"
+      aria-labelledby="del-modal-title" aria-describedby="del-modal-desc"
       onClick={e => { if (e.target === e.currentTarget && !loading) onClose() }}>
-
-      <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden animate-scale-in"
-        style={{ border: '1px solid var(--border)', boxShadow: 'var(--shadow-xl)' }}>
+      <div className="modal-box w-full max-w-sm">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4"
-          style={{ borderBottom: '1px solid var(--border)' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
-              <AlertTriangle size={17} className="text-red-500" />
-            </div>
-            <h2 className="font-semibold text-sm" style={{ color: 'var(--brown)' }}>
-              {title ?? 'Confirmer la suppression'}
-            </h2>
+        <div className="flex items-start gap-4 p-6">
+          <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center flex-shrink-0">
+            <AlertTriangle size={22} className="text-red-500" />
+          </div>
+          <div className="flex-1">
+            <h2 id="del-modal-title" className="text-base font-bold text-gray-900">{title}</h2>
+            <p id="del-modal-desc" className="text-sm text-gray-500 mt-1.5 leading-relaxed">{description}</p>
+            <p className="text-xs text-red-600 font-semibold mt-3 flex items-center gap-1.5">
+              <span>⚠</span> Cette action est permanente et irréversible.
+            </p>
           </div>
           <button onClick={onClose} disabled={loading}
-            className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-gray-100 transition-colors disabled:opacity-50"
-            style={{ color: 'var(--brown-muted)' }}>
-            <X size={15} />
+            className="btn btn-ghost btn-icon w-7 h-7 rounded-lg flex-shrink-0"
+            aria-label="Fermer">
+            <X size={14} />
           </button>
         </div>
 
-        {/* Corps */}
-        <div className="px-6 py-5">
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--brown-muted)' }}>
-            {description ?? 'Cette action est irréversible. Souhaitez-vous vraiment supprimer cet élément ?'}
-          </p>
-          <div className="mt-4 flex items-center gap-2 px-3 py-2.5 rounded-xl"
-            style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
-            <AlertTriangle size={13} className="text-red-400 shrink-0" />
-            <p className="text-xs text-red-600 font-medium">Cette action est irréversible.</p>
-          </div>
-        </div>
+        {/* Divider */}
+        <div className="divider" />
 
-        {/* Footer */}
-        <div className="flex justify-end gap-3 px-6 py-4"
-          style={{ borderTop: '1px solid var(--border)', background: 'var(--cream)' }}>
-          <button onClick={onClose} disabled={loading} className="btn-secondary">
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-2.5 px-6 py-4">
+          <button onClick={onClose} disabled={loading} className="btn btn-secondary">
             Annuler
           </button>
-          <button onClick={onConfirm} disabled={loading}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white rounded-xl transition-all disabled:opacity-50"
-            style={{ background: 'var(--danger)', boxShadow: '0 2px 8px rgba(220,38,38,.25)' }}>
-            <Trash2 size={14} />
-            {loading ? 'Suppression…' : 'Supprimer'}
+          <button onClick={onConfirm} disabled={loading} className="btn btn-danger">
+            {loading
+              ? <><Loader2 size={14} className="animate-spin-slow" /> Suppression…</>
+              : <><Trash2 size={14} /> Supprimer définitivement</>
+            }
           </button>
         </div>
       </div>
