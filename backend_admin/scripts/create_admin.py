@@ -16,9 +16,30 @@ import sys
 from pathlib import Path
 
 # Permet `python scripts/create_admin.py` depuis backend_admin/
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+_ADMIN_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_ADMIN_DIR))
 
 from werkzeug.security import generate_password_hash  # noqa: E402
+
+
+def _env_or_dotfile(name: str) -> str:
+    """
+    Lit une variable d'environnement avec repli sur le .env.
+    ⚠️ docker compose injecte ADMIN_EMAIL="" / ADMIN_PASSWORD="" (chaînes vides)
+    quand la racine ne les définit pas → on bascule alors sur backend_admin/.env.
+    Sans override global : les vars Docker (DB_HOST=db, etc.) restent prioritaires.
+    """
+    val = (os.environ.get(name) or "").strip()
+    if val:
+        return val
+    for env_path in (_ADMIN_DIR / ".env", _ADMIN_DIR.parent / ".env"):
+        if not env_path.exists():
+            continue
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line.startswith(f"{name}="):
+                return line.split("=", 1)[1].strip().strip('"').strip("'")
+    return ""
 
 from app import create_app  # noqa: E402
 from app.models import db, AdminUser  # noqa: E402
@@ -28,8 +49,8 @@ logger = logging.getLogger("NORA.CreateAdmin")
 
 
 def main() -> int:
-    email = (os.environ.get("ADMIN_EMAIL") or "").strip()
-    password = os.environ.get("ADMIN_PASSWORD") or ""
+    email = _env_or_dotfile("ADMIN_EMAIL").strip()
+    password = _env_or_dotfile("ADMIN_PASSWORD")
 
     if not email or not password:
         logger.error("ADMIN_EMAIL et ADMIN_PASSWORD doivent être définis dans l'environnement.")
