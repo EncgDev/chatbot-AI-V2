@@ -118,6 +118,29 @@ services:
       # Partage des embeddings avec le backend public (régénération admin)
       - ./backend/data:/app/data
 
+  # ─────────────────────────────────────────────
+  #  SERVICE 5 : Frontend Admin React (port 5174)
+  # ─────────────────────────────────────────────
+  frontend_admin:
+    build:
+      context: ./frontend_admin
+      dockerfile: Dockerfile
+    container_name: nora_v2_frontend_admin
+    restart: unless-stopped
+    command: npm run dev -- --host 0.0.0.0 --port 5174
+    ports:
+      - "5174:5174"
+    environment:
+      - VITE_USE_POLLING=true
+      - BACKEND_ADMIN_URL=http://backend_admin:5001
+    volumes:
+      - ./frontend_admin:/app
+      - /app/node_modules
+    depends_on:
+      - backend_admin
+    networks:
+      - nora_v2_network
+
 # ─────────────────────────────────────────────
 #  VOLUMES & RÉSEAU
 # ─────────────────────────────────────────────
