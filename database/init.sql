@@ -87,3 +87,13 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
 
 CREATE INDEX IF NOT EXISTS idx_admin_sessions_token ON admin_sessions(token);
 CREATE INDEX IF NOT EXISTS idx_admin_sessions_user  ON admin_sessions(user_id);
+
+-- Compte administrateur par défaut (admin@encg.ac.ma / AdminNora2026!)
+INSERT INTO admin_users (email, password_hash, full_name, is_active)
+VALUES (
+    'admin@encg.ac.ma',
+    'pbkdf2:sha256:1000000$eBQgxULNRHYYs5Bn$4b274e6b259f26af85eba37ad4e7348019fd379e983fd60ad74fc815a03c837f',
+    'Administrateur NORA',
+    TRUE
+)
+ON CONFLICT (email) DO NOTHING;
