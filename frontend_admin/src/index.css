@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:wght@600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
 
 @import "tailwindcss";
 
@@ -48,6 +48,7 @@ body {
 }
 
 .font-display { font-family: 'Playfair Display', Georgia, serif; }
+.font-modern  { font-family: 'Poppins', 'Inter', system-ui, sans-serif; }
 
 /* ═══════════════════════════════════════════════
    SCROLLBAR
@@ -84,6 +85,12 @@ body {
 .animate-slide-right { animation: slideRight .25s ease-out both; }
 .animate-slide-left  { animation: slideLeft .25s ease-out both; }
 .animate-shake       { animation: shake .4s ease-out both; }
+
+/* Décor flottant (page login) */
+@keyframes floatSlow  { 0%,100% { transform:translateY(0) scale(1) } 50% { transform:translateY(-18px) scale(1.04) } }
+@keyframes floatSlow2 { 0%,100% { transform:translateY(0) scale(1) } 50% { transform:translateY(14px) scale(0.97) } }
+.animate-float-slow  { animation: floatSlow 9s ease-in-out infinite; }
+.animate-float-slow2 { animation: floatSlow2 11s ease-in-out infinite; }
 
 /* Accessibilité : respecte prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
@@ -127,6 +134,45 @@ body {
 .input-base.error {
   border-color: var(--danger);
   box-shadow: 0 0 0 3px rgba(220,38,38,.10);
+}
+
+/* Input « box » (bordure pleine arrondie — page login) */
+.input-box {
+  width: 100%;
+  padding: .85rem 2.75rem .85rem 2.75rem;
+  background: white;
+  border: 1.5px solid #E2DDD6;
+  border-radius: 12px;
+  color: var(--brown);
+  font-size: .925rem;
+  font-family: inherit;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+}
+.input-box::placeholder { color: var(--brown-muted); opacity: .55; }
+.input-box:focus {
+  border-color: var(--bordeaux);
+  box-shadow: 0 0 0 3.5px rgba(133,24,26,.10);
+}
+
+/* Input « ligne » (style login épuré) */
+.input-line {
+  width: 100%;
+  padding: .8rem 2.75rem .8rem .1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--border);
+  color: var(--brown);
+  font-size: .95rem;
+  font-family: inherit;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+  border-radius: 0;
+}
+.input-line::placeholder { color: var(--brown-muted); opacity: .6; }
+.input-line:focus {
+  border-bottom-color: var(--bordeaux);
+  box-shadow: 0 1px 0 0 var(--bordeaux);
 }
 
 /* Button primaire */
