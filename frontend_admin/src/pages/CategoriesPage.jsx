@@ -1,18 +1,21 @@
 /**
- * CategoriesPage.jsx — Gestion des Catégories NORA Admin
- * KPI header · Grid de cards + Vue table · Inline edit
+ * CategoriesPage.jsx — Gestion des Catégories NORA Admin — Premium v3
+ * KPI header · Grid de cards + Vue table · Modal inline pour édition
+ * Note: remplace window.prompt() par un vrai modal d'édition
  */
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import CategoriesTable from '../components/CategoriesTable'
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal'
 import { listCategories, createCategory, updateCategory, deleteCategory } from '../api/adminApi'
 import { showToast } from '../components/Toast'
 import {
   Loader2, RefreshCw, FolderOpen, Hash, Plus,
-  LayoutGrid, Table2, TrendingUp
+  LayoutGrid, Table2, TrendingUp, X, Check, Edit3,
+  Sparkles, Tag, AlertCircle, Trash2, MessageSquare, BookOpen,
 } from 'lucide-react'
 
-/* ─── Category Card (grid view) ─────────────────────────────────── */
+/* ─── Color palettes ─────────────────────────────────────────────── */
 const CAT_ACCENTS = [
   '#800020', '#C85A32', '#2563EB', '#0D9488', '#7C3AED',
   '#DB2777', '#D97706', '#16A34A', '#0891B2', '#EA580C',
@@ -22,121 +25,316 @@ const CAT_BG = [
   '#FDF2F8', '#FFFBEB', '#F0FDF4', '#ECFEFF', '#FFF7ED',
 ]
 
-function CategoryCard({ cat, idx, onEdit, onDelete }) {
-  const accent = CAT_ACCENTS[idx % CAT_ACCENTS.length]
-  const bg     = CAT_BG[idx % CAT_BG.length]
+/* ─── Edit/Create Category Modal ─────────────────────────────────── */
+function CategoryFormModal({ isOpen, onClose, onSubmit, editData, loading }) {
+  const [name, setName] = useState('')
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(editData?.name ?? '')
+      setError('')
+    }
+  }, [isOpen, editData])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const fn = e => { if (e.key === 'Escape' && !loading) onClose() }
+    window.addEventListener('keydown', fn)
+    return () => window.removeEventListener('keydown', fn)
+  }, [isOpen, loading, onClose])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!name.trim()) { setError('Le nom de la catégorie est requis.'); return }
+    setError('')
+    await onSubmit(editData?.id ?? null, name.trim())
+  }
+
+  if (!isOpen) return null
+
+  return createPortal(
+    <div
+      className="cat-edit-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cat-modal-title"
+      onClick={e => { if (e.target === e.currentTarget && !loading) onClose() }}
+    >
+      <div className="cat-edit-box animate-scale-in">
+
+        {/* Header */}
+        <div className="flex items-center gap-3 border-b border-gray-100" style={{ padding: '18px 22px' }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'var(--brand-soft)' }}>
+            <Tag size={16} style={{ color: 'var(--brand)' }} />
+          </div>
+          <div className="flex-1">
+            <h2 id="cat-modal-title" className="text-[15px] font-bold text-gray-900 font-display">
+              {editData ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {editData
+                ? `Renommer « ${editData.name} »`
+                : 'Créer un nouveau thème dans la base NORA'}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="btn btn-ghost btn-icon w-8 h-8 rounded-lg"
+            aria-label="Fermer"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ padding: '20px 22px 18px' }}>
+          <div className="mb-4">
+            <label htmlFor="cat-name" className="form-label form-label-required">
+              Nom de la catégorie
+            </label>
+            <input
+              id="cat-name"
+              type="text"
+              value={name}
+              onChange={e => { setName(e.target.value); if (error) setError('') }}
+              placeholder="Ex: Admission & Inscriptions"
+              className={`input-base ${error ? 'error' : ''}`}
+              disabled={loading}
+              autoFocus
+            />
+            {error && (
+              <p className="form-error mt-1.5">
+                <AlertCircle size={12} /> {error}
+              </p>
+            )}
+            <p className="form-hint mt-1.5">
+              Le nom identifie le thème dans la base de connaissances de NORA.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="btn btn-secondary px-3.5 py-2 text-xs"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary px-4 py-2 text-xs"
+            >
+              {loading
+                ? <><Loader2 size={13} className="animate-spin-slow" /> Enregistrement…</>
+                : <><Check size={13} /> {editData ? 'Mettre à jour' : 'Créer la catégorie'}</>
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
+/* ─── Category Card ─────────────────────────────────────────────── */
+function CategoryCard({ cat, idx, totalQAs = 0, onEdit, onDelete }) {
+  const accent  = CAT_ACCENTS[idx % CAT_ACCENTS.length]
+  const bg      = CAT_BG[idx % CAT_BG.length]
   const initial = (cat.name || '?')[0].toUpperCase()
   const canDelete = (cat.qa_count ?? 0) === 0
+  const count   = cat.qa_count ?? 0
+  const pct     = totalQAs > 0 ? Math.round((count / totalQAs) * 100) : 0
 
   return (
-    <div className="cat-card" style={{ '--cat-accent': accent }}>
-      {/* Icon + name */}
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-base flex-shrink-0"
-          style={{ background: accent }}>
-          {initial}
-        </div>
-        <div className="flex-1 min-w-0 pt-0.5">
-          <h3 className="text-sm font-bold text-gray-900 leading-tight truncate" title={cat.name}>
-            {cat.name}
-          </h3>
-          <p className="text-xs text-gray-400 mt-0.5">Catégorie NORA</p>
-        </div>
-        {/* Actions appear on hover */}
-        <div className="cat-actions flex-shrink-0">
-          <button
-            onClick={() => onEdit(cat)}
-            className="btn btn-ghost btn-icon w-7 h-7 rounded-lg"
-            title="Modifier"
-            aria-label={`Modifier ${cat.name}`}
+    <div
+      className="cat-card group animate-fade-up flex flex-col justify-between"
+      style={{ '--cat-accent': accent, animationDelay: `${idx * 30}ms` }}
+    >
+      {/* Action buttons (floating top-right on hover) */}
+      <div className="cat-actions">
+        <button
+          onClick={() => onEdit(cat)}
+          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+          title="Modifier la catégorie"
+          aria-label="Modifier"
+        >
+          <Edit3 size={13} />
+        </button>
+        <button
+          onClick={() => canDelete && onDelete(cat)}
+          disabled={!canDelete}
+          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          title={canDelete ? 'Supprimer' : `${count} QA(s) associé(s)`}
+          aria-label="Supprimer"
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
+
+      <div>
+        {/* Top section: Avatar + Title & Status */}
+        <div className="flex items-start gap-3.5 mb-4">
+          {/* Avatar */}
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-black text-base flex-shrink-0 shadow-xs"
+            style={{ background: `linear-gradient(135deg, ${accent} 0%, ${accent}dd 100%)` }}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
-          </button>
-          <button
-            onClick={() => canDelete && onDelete(cat)}
-            disabled={!canDelete}
-            className="btn btn-ghost btn-icon w-7 h-7 rounded-lg hover:!bg-red-50 hover:!text-red-600 disabled:opacity-30 disabled:cursor-not-allowed"
-            title={canDelete ? 'Supprimer' : `${cat.qa_count} QA(s) associés — suppression impossible`}
-            aria-label={`Supprimer ${cat.name}`}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4h6v2"/>
-            </svg>
-          </button>
+            {initial}
+          </div>
+
+          {/* Name & status */}
+          <div className="flex-1 min-w-0 pr-6">
+            <h3
+              className="text-[14.5px] font-bold text-gray-900 leading-snug line-clamp-2 min-h-[38px] group-hover:text-brand transition-colors"
+              title={cat.name}
+            >
+              {cat.name}
+            </h3>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: count > 0 ? '#10B981' : '#94A3B8' }}
+              />
+              <span className="text-[11px] font-semibold text-gray-500">
+                {count > 0 ? 'Thème actif' : 'En attente de Q&R'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Professional Knowledge Metric Banner */}
+        <div
+          className="p-4 rounded-xl border flex items-center justify-between mb-4 transition-all group-hover:border-gray-300"
+          style={{
+            backgroundColor: count > 0 ? bg : '#F8FAFC',
+            borderColor: count > 0 ? `${accent}25` : '#E2E8F0',
+          }}
+        >
+          <div className="flex items-center gap-3.5">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center bg-white shadow-2xs flex-shrink-0"
+              style={{ color: accent }}
+            >
+              <MessageSquare size={17} />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                Base de données
+              </p>
+              <p className="text-base font-black text-gray-900 leading-tight mt-0.5">
+                {count} <span className="text-xs font-semibold text-gray-500">QA{count !== 1 ? 's' : ''}</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Knowledge Share Percentage */}
+          <div className="text-right">
+            <span
+              className="text-xs font-black px-2.5 py-1 rounded-lg bg-white shadow-2xs border border-gray-100/80 inline-block"
+              style={{ color: accent }}
+            >
+              {pct}%
+            </span>
+            <p className="text-[10px] text-gray-400 font-medium mt-0.5">du savoir</p>
+          </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="flex items-center gap-3">
-        <div className="flex-1 px-3 py-2 rounded-xl text-center" style={{ background: bg }}>
-          <p className="text-lg font-extrabold" style={{ color: accent }}>{cat.qa_count ?? 0}</p>
-          <p className="text-[10px] text-gray-500 font-medium leading-tight">Question{(cat.qa_count ?? 0) !== 1 ? 's' : ''}</p>
-        </div>
-        <div className="flex-1 px-3 py-2 rounded-xl text-center bg-gray-50">
-          <p className="text-lg font-extrabold text-gray-700">#{cat.id}</p>
-          <p className="text-[10px] text-gray-400 font-medium leading-tight">ID</p>
-        </div>
-      </div>
-
-      {/* Bottom tag */}
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-        <span className="text-[10px] text-gray-400 font-medium">
-          {(cat.qa_count ?? 0) > 0 ? `${cat.qa_count} QAs indexés` : 'Aucun QA associé'}
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-3.5 border-t border-gray-100 text-xs">
+        <span className="text-gray-500 font-medium flex items-center gap-1.5 text-[11.5px]">
+          <BookOpen size={12} className="text-gray-400" />
+          {count > 0 ? `${count} question${count > 1 ? 's' : ''} indexée${count > 1 ? 's' : ''}` : 'Aucune entrée'}
         </span>
-        <span className="badge" style={{ background: bg, color: accent }}>
-          {(cat.qa_count ?? 0) > 0 ? 'Actif' : 'Vide'}
-        </span>
+        {!canDelete ? (
+          <span className="text-[10.5px] text-amber-700 font-semibold flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
+            <AlertCircle size={10} /> Protégée
+          </span>
+        ) : (
+          <span className="text-[10.5px] text-emerald-700 font-semibold flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
+            ✓ Supprimable
+          </span>
+        )}
       </div>
     </div>
   )
 }
 
-/* ─── Main Component ─────────────────────────────────────────────── */
-export default function CategoriesPage() {
-  const [categories, setCategories]   = useState([])
-  const [loading, setLoading]         = useState(true)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [deleteTarget, setDeleteTarget]   = useState(null)
-  const [viewMode, setViewMode]       = useState('grid') // 'grid' | 'table'
+/* ─── KPI Mini Card ─────────────────────────────────────────────── */
+function KpiCard({ icon: Icon, iconBg, iconColor, value, label, sub }) {
+  return (
+    <div className="bg-white rounded-2xl p-4 sm:p-4.5 border border-gray-100 shadow-sm flex items-center gap-3.5 hover:shadow-md transition-shadow">
+      <div
+        className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{ background: iconBg }}
+      >
+        <Icon size={20} style={{ color: iconColor }} />
+      </div>
+      <div>
+        <p className="text-2xl font-extrabold text-gray-900 font-display leading-none">{value}</p>
+        <p className="text-xs font-bold text-gray-700 mt-1">{label}</p>
+        <p className="text-[11px] text-gray-400">{sub}</p>
+      </div>
+    </div>
+  )
+}
 
-  /* Inline new category form state */
-  const [showNewForm, setShowNewForm] = useState(false)
-  const [newName, setNewName]         = useState('')
-  const [newErr, setNewErr]           = useState('')
+/* ─── Main Page Component ────────────────────────────────────────── */
+export default function CategoriesPage({ onQAChange }) {
+  const [categories, setCategories]     = useState([])
+  const [loading, setLoading]           = useState(true)
+  const [actionLoading, setActionLoading] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [viewMode, setViewMode]         = useState('grid')
+
+  /* Category form modal state */
+  const [formOpen, setFormOpen]         = useState(false)
+  const [formEdit, setFormEdit]         = useState(null) // null = create, obj = edit
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
       const res = await listCategories()
       setCategories(res.data ?? [])
-    } catch (e) { showToast(e.message, 'error') }
-    finally { setLoading(false) }
+    } catch (e) {
+      showToast(e.message, 'error')
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { load() }, [load])
 
-  /* CRUD handlers */
-  const handleSave = async (id, name) => {
-    setActionLoading(true)
-    try {
-      if (id) { await updateCategory(id, name); showToast('✓ Catégorie mise à jour.') }
-      else     { await createCategory(name);     showToast('✓ Catégorie créée.') }
-      await load()
-    } finally { setActionLoading(false) }
-  }
+  /* Open modal */
+  const openCreate = () => { setFormEdit(null); setFormOpen(true) }
+  const openEdit   = cat => { setFormEdit(cat); setFormOpen(true) }
+  const closeForm  = () => { setFormOpen(false); setFormEdit(null) }
 
-  const handleNewSubmit = async () => {
-    if (!newName.trim()) { setNewErr('Le nom est requis.'); return }
+  /* CRUD */
+  const handleFormSubmit = async (id, name) => {
     setActionLoading(true)
     try {
-      await createCategory(newName.trim())
-      showToast('✓ Catégorie créée.')
-      setNewName(''); setNewErr(''); setShowNewForm(false)
+      if (id) {
+        await updateCategory(id, name)
+        showToast('✓ Catégorie mise à jour avec succès.', 'success')
+      } else {
+        await createCategory(name)
+        showToast('✓ Catégorie créée avec succès.', 'success')
+      }
+      closeForm()
       await load()
-    } catch (e) { setNewErr(e.message) }
-    finally { setActionLoading(false) }
+      onQAChange?.()
+    } catch (e) {
+      showToast(e.message, 'error')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   const confirmDelete = async () => {
@@ -144,109 +342,110 @@ export default function CategoriesPage() {
     setActionLoading(true)
     try {
       await deleteCategory(deleteTarget.id)
-      showToast('✓ Catégorie supprimée.')
+      showToast('✓ Catégorie supprimée.', 'success')
       setDeleteTarget(null)
       await load()
-    } catch (e) { showToast(e.message, 'error') }
-    finally { setActionLoading(false) }
+    } catch (e) {
+      showToast(e.message, 'error')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   const totalQAs = categories.reduce((s, c) => s + (c.qa_count ?? 0), 0)
+  const avgQAs   = categories.length > 0 ? (totalQAs / categories.length).toFixed(1) : '—'
 
   return (
-    <div className="space-y-8 md:space-y-10 pb-16 animate-fade-up max-w-[1440px] mx-auto">
+    <div className="flex flex-col gap-6 sm:gap-7 lg:gap-8 animate-fade-up max-w-[1440px] mx-auto">
 
       {/* ── Page Header ── */}
-      <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 font-display tracking-tight">
-            Gestion des Catégories
-          </h1>
-          <p className="text-xs md:text-sm text-gray-400 mt-1">
-            Organisez la base de connaissances de l'IA NORA par thèmes académiques
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={load}
-            disabled={loading}
-            className="btn btn-secondary btn-icon rounded-xl"
-            title="Actualiser"
-          >
-            <RefreshCw size={14} className={loading ? 'animate-spin-slow' : ''} />
-          </button>
-          <button
-            onClick={() => { setShowNewForm(true); setNewName(''); setNewErr('') }}
-            disabled={showNewForm}
-            className="btn btn-primary rounded-xl px-4 py-2.5 text-xs font-bold"
-          >
-            <Plus size={15} />
-            Nouvelle catégorie
-          </button>
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm" style={{ padding: '26px 32px' }}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10.5px] font-bold mb-2.5"
+              style={{ background: 'var(--brand-soft)', color: 'var(--brand)' }}>
+              <Sparkles size={10} />
+              Base de connaissances NORA
+            </div>
+            <h1 className="page-title">Gestion des Catégories</h1>
+            <p className="page-subtitle">
+              Organisez les thèmes académiques de l'assistant intelligent NORA
+            </p>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={load}
+              disabled={loading}
+              className="btn btn-secondary btn-icon rounded-xl"
+              title="Actualiser"
+            >
+              <RefreshCw size={14} className={loading ? 'animate-spin-slow' : ''} />
+            </button>
+            <button
+              onClick={openCreate}
+              className="btn btn-primary rounded-xl px-4 py-2 text-xs font-bold"
+            >
+              <Plus size={14} />
+              Nouvelle catégorie
+            </button>
+          </div>
         </div>
       </div>
 
       {/* ── KPI Row ── */}
       {!loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--kpi-blue-bg)' }}>
-              <FolderOpen size={22} style={{ color: 'var(--kpi-blue-icon)' }} />
-            </div>
-            <div>
-              <p className="text-2xl font-black text-gray-900 font-display">{categories.length}</p>
-              <p className="text-xs font-bold text-gray-700">Catégories Actives</p>
-              <p className="text-[11px] text-gray-400">thèmes configurés</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--kpi-green-bg)' }}>
-              <Hash size={22} style={{ color: 'var(--kpi-green-icon)' }} />
-            </div>
-            <div>
-              <p className="text-2xl font-black text-gray-900 font-display">{totalQAs}</p>
-              <p className="text-xs font-bold text-gray-700">Questions (QAs)</p>
-              <p className="text-[11px] text-gray-400">au total dans la BDD</p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--kpi-purple-bg)' }}>
-              <TrendingUp size={22} style={{ color: 'var(--kpi-purple-icon)' }} />
-            </div>
-            <div>
-              <p className="text-2xl font-black text-gray-900 font-display">
-                {categories.length > 0 ? (totalQAs / categories.length).toFixed(1) : '—'}
-              </p>
-              <p className="text-xs font-bold text-gray-700">Moyenne QAs / Thème</p>
-              <p className="text-[11px] text-gray-400">densité de connaissances</p>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 animate-fade-up delay-75">
+          <KpiCard
+            icon={FolderOpen}
+            iconBg="var(--kpi-blue-bg)"
+            iconColor="var(--kpi-blue-icon)"
+            value={categories.length}
+            label="Catégories Actives"
+            sub="thèmes configurés"
+          />
+          <KpiCard
+            icon={Hash}
+            iconBg="var(--kpi-green-bg)"
+            iconColor="var(--kpi-green-icon)"
+            value={totalQAs}
+            label="Questions (QAs)"
+            sub="total dans la base"
+          />
+          <KpiCard
+            icon={TrendingUp}
+            iconBg="var(--kpi-purple-bg)"
+            iconColor="var(--kpi-purple-icon)"
+            value={avgQAs}
+            label="Moyenne QAs / Thème"
+            sub="densité de connaissances"
+          />
         </div>
       )}
 
       {/* ── Content Card ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-fade-up delay-100">
+
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'var(--brand-soft)' }}>
-              <FolderOpen size={16} style={{ color: 'var(--brand)' }} />
+        <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-gray-100 flex-wrap gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--brand-soft)' }}>
+              <FolderOpen size={19} style={{ color: 'var(--brand)' }} />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-800">Liste des catégories</p>
-              <p className="text-xs text-gray-400">
-                {loading ? 'Chargement…' : `${categories.length} catégorie${categories.length !== 1 ? 's' : ''}`}
+              <h2 className="text-base sm:text-[17px] font-extrabold text-gray-900 font-display leading-tight">
+                Liste des catégories
+              </h2>
+              <p className="text-xs sm:text-[13px] text-gray-400 font-medium mt-0.5">
+                {loading ? 'Chargement…' : `${categories.length} catégorie${categories.length !== 1 ? 's' : ''} active${categories.length !== 1 ? 's' : ''} dans NORA`}
               </p>
             </div>
           </div>
 
           {/* View toggle */}
-          <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-lg">
+          <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-xl">
             <button
               onClick={() => setViewMode('grid')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 viewMode === 'grid'
                   ? 'bg-white text-gray-800 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
@@ -256,7 +455,7 @@ export default function CategoriesPage() {
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 viewMode === 'table'
                   ? 'bg-white text-gray-800 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
@@ -267,75 +466,34 @@ export default function CategoriesPage() {
           </div>
         </div>
 
-        {/* Inline new-category form */}
-        {showNewForm && (
-          <div className="px-5 py-3 border-b border-amber-100 bg-amber-50/50 animate-slide-down">
-            <div className="flex items-center gap-3 max-w-lg">
-              <input
-                autoFocus
-                type="text"
-                value={newName}
-                onChange={e => setNewName(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') handleNewSubmit()
-                  if (e.key === 'Escape') { setShowNewForm(false); setNewErr('') }
-                }}
-                placeholder="Nom de la nouvelle catégorie…"
-                className={`input-base flex-1 ${newErr ? 'error' : ''}`}
-              />
-              <button
-                onClick={handleNewSubmit}
-                disabled={actionLoading}
-                className="btn btn-primary text-xs px-4"
-              >
-                {actionLoading ? <Loader2 size={14} className="animate-spin-slow" /> : 'Créer'}
-              </button>
-              <button
-                onClick={() => { setShowNewForm(false); setNewErr('') }}
-                className="btn btn-secondary btn-icon"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
-            </div>
-            {newErr && <p className="text-xs text-red-600 font-medium mt-2">⚠ {newErr}</p>}
-          </div>
-        )}
-
         {/* Content */}
         {loading ? (
-          <div className="p-8 flex items-center justify-center gap-3 text-gray-400">
+          <div className="p-10 flex items-center justify-center gap-3 text-gray-400">
             <Loader2 size={22} className="animate-spin-slow" style={{ color: 'var(--brand)' }} />
             <span className="text-sm font-medium">Chargement des catégories…</span>
           </div>
-        ) : categories.length === 0 && !showNewForm ? (
-          <div className="p-16 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <FolderOpen size={24} className="text-gray-400" />
+        ) : categories.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <FolderOpen size={28} />
             </div>
-            <p className="text-base font-bold text-gray-700">Aucune catégorie</p>
-            <p className="text-sm text-gray-400 mt-1">Créez votre première catégorie pour organiser les QAs.</p>
-            <button
-              onClick={() => { setShowNewForm(true); setNewName('') }}
-              className="btn btn-primary mt-5"
-            >
-              <Plus size={14} /> Nouvelle catégorie
+            <p className="empty-state-title">Aucune catégorie</p>
+            <p className="empty-state-desc">
+              Créez votre première catégorie pour organiser la base de connaissances de NORA.
+            </p>
+            <button onClick={openCreate} className="btn btn-primary mt-6">
+              <Plus size={14} /> Créer la première catégorie
             </button>
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="p-5 cat-grid">
+          <div className="p-6 sm:p-8 cat-grid">
             {categories.map((cat, i) => (
               <CategoryCard
                 key={cat.id}
                 cat={cat}
                 idx={i}
-                onEdit={cat => {
-                  const name = window.prompt(`Renommer « ${cat.name} » :`, cat.name)
-                  if (name && name.trim() && name.trim() !== cat.name) {
-                    handleSave(cat.id, name.trim())
-                  }
-                }}
+                totalQAs={totalQAs}
+                onEdit={openEdit}
                 onDelete={setDeleteTarget}
               />
             ))}
@@ -343,21 +501,34 @@ export default function CategoriesPage() {
         ) : (
           <CategoriesTable
             categories={categories}
-            onSave={handleSave}
+            onSave={(id, name) => handleFormSubmit(id, name)}
             onDelete={setDeleteTarget}
             loading={actionLoading}
+            onEdit={openEdit}
           />
         )}
       </div>
 
-      {/* Delete Modal */}
+      {/* ── Modals ── */}
+      <CategoryFormModal
+        isOpen={formOpen}
+        onClose={closeForm}
+        onSubmit={handleFormSubmit}
+        editData={formEdit}
+        loading={actionLoading}
+      />
+
       <ConfirmDeleteModal
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
         loading={actionLoading}
         title="Supprimer la catégorie"
-        description={deleteTarget ? `Supprimer définitivement la catégorie « ${deleteTarget.name} » ?` : ''}
+        description={
+          deleteTarget
+            ? `Supprimer définitivement la catégorie « ${deleteTarget.name} » ? Cette action supprimera également tous ses QAs associés.`
+            : ''
+        }
       />
     </div>
   )

@@ -1,10 +1,10 @@
 /**
- * CategoriesTable.jsx — Table view for categories
+ * CategoriesTable.jsx — Table view premium pour les catégories v3
  */
 import { useState } from 'react'
-import { Loader2, Pencil, Trash2, Check, X, FolderOpen } from 'lucide-react'
+import { Loader2, Pencil, Trash2, Check, X, Edit3 } from 'lucide-react'
 
-export default function CategoriesTable({ categories, onSave, onDelete, loading }) {
+export default function CategoriesTable({ categories, onSave, onDelete, loading, onEdit }) {
   const [editId, setEditId]     = useState(null)
   const [editName, setEditName] = useState('')
   const [editErr, setEditErr]   = useState('')
@@ -29,20 +29,25 @@ export default function CategoriesTable({ categories, onSave, onDelete, loading 
       <table className="data-table" role="table" aria-label="Liste des catégories">
         <thead>
           <tr>
-            <th style={{ width: 60 }}>#</th>
+            <th style={{ width: 56 }}>#</th>
             <th>Nom de la catégorie</th>
-            <th style={{ width: 120 }}>Questions</th>
-            <th style={{ width: 120 }}>État</th>
-            <th style={{ width: 100 }}>Actions</th>
+            <th style={{ width: 130 }}>Questions</th>
+            <th style={{ width: 110 }}>État</th>
+            <th style={{ width: 110 }}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {categories.map((cat, i) => (
-            <tr key={cat.id}>
-              {/* Index */}
-              <td className="font-mono text-xs text-gray-400">{i + 1}</td>
+            <tr key={cat.id} className={editId === cat.id ? 'bg-amber-50/40' : ''}>
 
-              {/* Name / Edit */}
+              {/* Index */}
+              <td>
+                <span className="font-mono text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">
+                  {i + 1}
+                </span>
+              </td>
+
+              {/* Name / Inline Edit */}
               <td>
                 {editId === cat.id ? (
                   <div className="flex items-center gap-2">
@@ -50,39 +55,66 @@ export default function CategoriesTable({ categories, onSave, onDelete, loading 
                       autoFocus
                       type="text"
                       value={editName}
-                      onChange={e => setEditName(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') cancelEdit() }}
+                      onChange={e => { setEditName(e.target.value); setEditErr('') }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleSave()
+                        if (e.key === 'Escape') cancelEdit()
+                      }}
                       className={`input-base text-sm w-48 ${editErr ? 'error' : ''}`}
+                      style={{ height: 36 }}
                     />
-                    <button onClick={handleSave} disabled={loading}
-                      className="btn btn-primary btn-icon w-7 h-7 rounded-md" title="Enregistrer">
-                      {loading ? <Loader2 size={12} className="animate-spin-slow" /> : <Check size={13} />}
+                    <button
+                      onClick={handleSave}
+                      disabled={loading}
+                      className="btn btn-primary btn-icon w-8 h-8 rounded-lg"
+                      title="Enregistrer"
+                    >
+                      {loading
+                        ? <Loader2 size={13} className="animate-spin-slow" />
+                        : <Check size={14} />
+                      }
                     </button>
-                    <button onClick={cancelEdit}
-                      className="btn btn-secondary btn-icon w-7 h-7 rounded-md" title="Annuler">
-                      <X size={13} />
+                    <button
+                      onClick={cancelEdit}
+                      className="btn btn-secondary btn-icon w-8 h-8 rounded-lg"
+                      title="Annuler"
+                    >
+                      <X size={14} />
                     </button>
+                    {editErr && (
+                      <span className="text-xs text-red-600 font-medium">{editErr}</span>
+                    )}
                   </div>
                 ) : (
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                      style={{ background: 'var(--brand)', opacity: .9 }}>
+                    <div
+                      className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                      style={{
+                        background: 'linear-gradient(135deg, var(--brand) 0%, var(--brand-mid) 100%)',
+                      }}
+                    >
                       {(cat.name || '?')[0].toUpperCase()}
                     </div>
-                    <span className="font-semibold text-gray-800">{cat.name}</span>
+                    <span className="font-semibold text-gray-800 text-sm">{cat.name}</span>
                   </div>
                 )}
               </td>
 
               {/* QA Count */}
               <td>
-                <span className="badge badge-info">{cat.qa_count ?? 0} QA</span>
+                <span className="badge badge-info font-bold">
+                  {cat.qa_count ?? 0} QA{(cat.qa_count ?? 0) !== 1 ? 's' : ''}
+                </span>
               </td>
 
               {/* Status */}
               <td>
-                <span className={`badge ${(cat.qa_count ?? 0) > 0 ? 'badge-success' : 'badge-cream'}`}>
-                  {(cat.qa_count ?? 0) > 0 ? 'Actif' : 'Vide'}
+                <span
+                  className={`badge ${
+                    (cat.qa_count ?? 0) > 0 ? 'badge-success' : 'badge-cream'
+                  }`}
+                >
+                  {(cat.qa_count ?? 0) > 0 ? '● Actif' : '○ Vide'}
                 </span>
               </td>
 
@@ -91,17 +123,21 @@ export default function CategoriesTable({ categories, onSave, onDelete, loading 
                 {editId !== cat.id && (
                   <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => startEdit(cat)}
-                      className="btn btn-ghost btn-icon w-7 h-7 rounded-md"
+                      onClick={() => onEdit ? onEdit(cat) : startEdit(cat)}
+                      className="btn btn-ghost btn-icon w-8 h-8 rounded-lg"
                       title="Modifier"
                     >
-                      <Pencil size={13} />
+                      <Edit3 size={13} />
                     </button>
                     <button
                       onClick={() => (cat.qa_count ?? 0) === 0 && onDelete(cat)}
                       disabled={(cat.qa_count ?? 0) > 0}
-                      className="btn btn-ghost btn-icon w-7 h-7 rounded-md hover:!bg-red-50 hover:!text-red-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                      title={(cat.qa_count ?? 0) > 0 ? 'Impossible: des QAs sont associés' : 'Supprimer'}
+                      className="btn btn-ghost btn-icon w-8 h-8 rounded-lg hover:!bg-red-50 hover:!text-red-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                      title={
+                        (cat.qa_count ?? 0) > 0
+                          ? 'Impossible : des QAs sont associés'
+                          : 'Supprimer'
+                      }
                     >
                       <Trash2 size={13} />
                     </button>

@@ -1,7 +1,8 @@
 /**
- * ConfirmDeleteModal.jsx — Modal de confirmation de suppression
+ * ConfirmDeleteModal.jsx — Modal de confirmation de suppression — Premium v3
  */
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Loader2, Trash2, X, AlertTriangle } from 'lucide-react'
 
 export default function ConfirmDeleteModal({
@@ -18,28 +19,47 @@ export default function ConfirmDeleteModal({
 
   if (!isOpen) return null
 
-  return (
-    <div className="modal-overlay" role="alertdialog" aria-modal="true"
-      aria-labelledby="del-modal-title" aria-describedby="del-modal-desc"
-      onClick={e => { if (e.target === e.currentTarget && !loading) onClose() }}>
+  return createPortal(
+    <div
+      className="modal-overlay"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="del-modal-title"
+      aria-describedby="del-modal-desc"
+      onClick={e => { if (e.target === e.currentTarget && !loading) onClose() }}
+    >
       <div className="modal-box w-full max-w-sm">
-
         {/* Header */}
-        <div className="flex items-start gap-4 p-6">
-          <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center flex-shrink-0">
-            <AlertTriangle size={22} className="text-red-500" />
+        <div className="flex items-start gap-3.5" style={{ padding: '22px 24px 16px' }}>
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: '#FEF2F2' }}
+          >
+            <AlertTriangle size={20} className="text-red-500" />
           </div>
           <div className="flex-1">
-            <h2 id="del-modal-title" className="text-base font-bold text-gray-900">{title}</h2>
-            <p id="del-modal-desc" className="text-sm text-gray-500 mt-1.5 leading-relaxed">{description}</p>
-            <p className="text-xs text-red-600 font-semibold mt-3 flex items-center gap-1.5">
-              <span>⚠</span> Cette action est permanente et irréversible.
+            <h2 id="del-modal-title" className="text-[15px] font-bold text-gray-900 leading-tight">
+              {title}
+            </h2>
+            <p id="del-modal-desc" className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+              {description}
             </p>
+            <div
+              className="flex items-center gap-2 mt-2.5 px-2.5 py-2 rounded-lg border"
+              style={{ background: '#FEF2F2', borderColor: '#FECACA' }}
+            >
+              <span className="text-[10.5px] text-red-700 font-semibold leading-snug">
+                ⚠ Cette action est permanente et ne peut pas être annulée.
+              </span>
+            </div>
           </div>
-          <button onClick={onClose} disabled={loading}
-            className="btn btn-ghost btn-icon w-7 h-7 rounded-lg flex-shrink-0"
-            aria-label="Fermer">
-            <X size={14} />
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="btn btn-ghost btn-icon w-8 h-8 rounded-lg flex-shrink-0"
+            aria-label="Fermer"
+          >
+            <X size={15} />
           </button>
         </div>
 
@@ -47,11 +67,11 @@ export default function ConfirmDeleteModal({
         <div className="divider" />
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2.5 px-6 py-4">
-          <button onClick={onClose} disabled={loading} className="btn btn-secondary">
+        <div className="flex items-center justify-end gap-2.5" style={{ padding: '14px 24px 18px' }}>
+          <button onClick={onClose} disabled={loading} className="btn btn-secondary px-3.5 py-2 text-xs">
             Annuler
           </button>
-          <button onClick={onConfirm} disabled={loading} className="btn btn-danger">
+          <button onClick={onConfirm} disabled={loading} className="btn btn-danger px-4 py-2 text-xs">
             {loading
               ? <><Loader2 size={14} className="animate-spin-slow" /> Suppression…</>
               : <><Trash2 size={14} /> Supprimer définitivement</>
@@ -59,6 +79,7 @@ export default function ConfirmDeleteModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

@@ -1,7 +1,6 @@
 /**
- * LoginPage.jsx — Connexion NORA Admin
- * Split-screen avec vague : panneau bordeaux à gauche (NORA Admin + robot),
- * formulaire sur fond blanc à droite. Palette ENCG, typo Poppins/Playfair.
+ * LoginPage.jsx — Connexion NORA Admin — Premium v4
+ * Form parfaitement centré, panneau gauche plus immersif
  */
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -11,11 +10,10 @@ import {
 } from 'lucide-react'
 import { login, getMe, setStoredToken, getStoredToken } from '../api/adminApi'
 
-/* Fonctionnalités mises en avant dans le panneau (liées au back-office) */
 const PANEL_FEATURES = [
   'Gestion des catégories & QAs',
-  'Base de connaissances temps réel',
-  'Régénération de l\'index IA',
+  'Synchronisation IA temps réel',
+  'Interface sécurisée · JWT',
 ]
 
 export default function LoginPage() {
@@ -35,7 +33,10 @@ export default function LoginPage() {
     e.preventDefault()
     if (loading) return
     setError('')
-    if (!form.email.trim() || !form.password) { setError('Veuillez remplir tous les champs.'); return }
+    if (!form.email.trim() || !form.password) {
+      setError('Veuillez remplir tous les champs.')
+      return
+    }
     setLoading(true)
     try {
       const data = await login(form.email.trim(), form.password)
@@ -49,212 +50,280 @@ export default function LoginPage() {
   }
 
   if (checking) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#FFFFFF' }}>
-      <Loader2 size={28} style={{ color: 'var(--bordeaux)', animation: 'spin 1s linear infinite' }} />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F4F6F9' }}>
+      <Loader2 size={28} style={{ color: 'var(--brand)', animation: 'spin 1s linear infinite' }} />
     </div>
   )
 
   return (
-    <div className="min-h-screen flex relative" style={{ background: '#FFFFFF' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', overflow: 'hidden' }}>
 
-      {/* ══ Panneau gauche — bordeaux profond ═══════════════════════════ */}
-      <div className="hidden lg:flex flex-col w-[42%] shrink-0 relative overflow-hidden"
-        style={{ background: 'linear-gradient(170deg, #8A1215 0%, #7A0F12 55%, #6B1113 100%)' }}>
+      {/* ══ Panneau gauche ══════════════════════════════════ */}
+      <div style={{
+        display: 'none',
+        width: '42%',
+        flexShrink: 0,
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'linear-gradient(155deg, #6B0018 0%, #800020 45%, #9A0B2E 100%)',
+        flexDirection: 'column',
+      }} className="lg:!flex">
 
-        {/* Motif cercles embossé (subtil) */}
-        <svg className="absolute inset-0 w-full h-full opacity-[0.05]" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        {/* Pattern */}
+        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.06 }}
+          viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
           <defs>
-            <pattern id="panelCircles" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
-              <circle cx="40" cy="40" r="24" stroke="white" strokeWidth="0.8" fill="none"/>
-              <circle cx="40" cy="40" r="12" stroke="white" strokeWidth="0.5" fill="none"/>
-              <circle cx="0" cy="0" r="14" stroke="white" strokeWidth="0.5" fill="none"/>
-              <circle cx="80" cy="0" r="14" stroke="white" strokeWidth="0.5" fill="none"/>
-              <circle cx="0" cy="80" r="14" stroke="white" strokeWidth="0.5" fill="none"/>
-              <circle cx="80" cy="80" r="14" stroke="white" strokeWidth="0.5" fill="none"/>
+            <pattern id="hexPat" x="0" y="0" width="56" height="56" patternUnits="userSpaceOnUse">
+              <polygon points="28,4 52,18 52,46 28,52 4,46 4,18"
+                stroke="white" strokeWidth="0.7" fill="none" />
             </pattern>
           </defs>
-          <rect width="400" height="400" fill="url(#panelCircles)"/>
+          <rect width="400" height="400" fill="url(#hexPat)" />
         </svg>
 
-        {/* Halo lumineux derrière le robot */}
-        <div className="absolute top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[26rem] h-[26rem] rounded-full opacity-25" aria-hidden="true"
-          style={{ background: 'radial-gradient(circle, rgba(255,255,255,.30) 0%, transparent 65%)' }} />
+        {/* Glow */}
+        <div style={{
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 400, height: 400, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(255,255,255,.08) 0%, transparent 65%)',
+          pointerEvents: 'none',
+        }} aria-hidden="true" />
 
-        <div className="relative z-10 flex flex-col h-full px-10 pt-10 pb-9 text-center">
+        {/* Content */}
+        <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', height: '100%', padding: '40px 44px' }}>
 
-          {/* Haut : badge + titre + sous-titre */}
+          {/* Badge */}
           <div>
-            <span className="font-modern inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-white/90 text-[10px] font-semibold tracking-[0.22em] uppercase"
-              style={{ background: 'rgba(255,255,255,.13)', border: '1px solid rgba(255,255,255,.20)' }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 7,
+              padding: '7px 14px', borderRadius: 99,
+              background: 'rgba(255,255,255,.12)', border: '1px solid rgba(255,255,255,.20)',
+              color: 'rgba(255,255,255,.85)', fontSize: 10.5, fontWeight: 700,
+              letterSpacing: '0.18em', textTransform: 'uppercase',
+            }}>
               <ShieldCheck size={11} /> Back-office sécurisé
             </span>
-            <h1 className="font-display text-[2.6rem] xl:text-5xl font-bold text-white leading-[1.08] mt-5">
-              NORA Admin
+
+            <h1 style={{
+              fontFamily: "'Plus Jakarta Sans', Inter, sans-serif",
+              fontSize: 52, fontWeight: 900, color: 'white',
+              lineHeight: 1.05, marginTop: 22, letterSpacing: -1,
+            }}>
+              NORA
             </h1>
-            <p className="font-modern text-white/65 text-[13px] leading-relaxed max-w-[250px] mx-auto mt-3">
+            <p style={{
+              fontSize: 18, fontWeight: 400, color: 'rgba(255,255,255,.55)',
+              marginTop: 2, marginBottom: 12,
+            }}>
+              Admin Console
+            </p>
+            <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,.45)', lineHeight: 1.7, maxWidth: 240 }}>
               Console d'administration de l'assistant intelligent de l'ENCG Marrakech
             </p>
           </div>
 
-          {/* Centre : robot NORA */}
-          <div className="flex-1 flex items-center justify-center">
-            <img src="/nora_robot.png" alt="Mascotte NORA"
-              className="animate-float-slow w-64 xl:w-80 object-contain drop-shadow-2xl" />
+          {/* Robot */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img
+              src="/nora_robot.png"
+              alt="NORA"
+              className="animate-float-slow"
+              style={{ width: 220, objectFit: 'contain', filter: 'drop-shadow(0 20px 40px rgba(0,0,0,.3))' }}
+            />
           </div>
 
-          {/* Bas : fonctionnalités (bloc centré, textes alignés à gauche) */}
-          <div className="flex justify-center mb-3">
-            <ul className="font-modern flex flex-col items-start gap-3">
-              {PANEL_FEATURES.map((text) => (
-                <li key={text} className="flex items-center gap-2.5 text-white/75 text-xs font-medium">
-                  <CheckCircle2 size={13} className="text-white/50 shrink-0" />
-                  {text}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Features */}
+          <ul style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {PANEL_FEATURES.map((f, i) => (
+              <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'rgba(255,255,255,.13)', border: '1px solid rgba(255,255,255,.18)',
+                }}>
+                  <CheckCircle2 size={13} style={{ color: 'rgba(255,255,255,.75)' }} />
+                </div>
+                <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,.7)', fontWeight: 500 }}>{f}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
-      {/* ══ Vague blanche de séparation (desktop) ═══════════════════════ */}
-      <svg className="hidden lg:block absolute inset-y-0 z-10 pointer-events-none h-full"
-        style={{ left: '42%', width: '150px', transform: 'translateX(-50%)', filter: 'drop-shadow(-10px 0 18px rgba(60,10,12,.18))' }}
-        viewBox="0 0 150 100" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M150 0 C 25 18, 115 52, 40 100 L150 100 Z" fill="#FFFFFF" />
+      {/* ══ Séparateur ══════════════════════════════════════ */}
+      <svg className="hidden lg:block"
+        style={{
+          position: 'absolute', top: 0, bottom: 0, zIndex: 10,
+          left: '42%', width: 100, transform: 'translateX(-50%)',
+          filter: 'drop-shadow(-10px 0 16px rgba(40,0,8,.18))',
+          pointerEvents: 'none', height: '100%',
+        }}
+        viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M100 0 C 15 18, 85 50, 20 100 L100 100 Z" fill="#F4F6F9" />
       </svg>
 
-      {/* Lignes décoratives fines (bordeaux) traversant le côté blanc */}
-      <svg className="hidden lg:block absolute inset-y-0 z-0 pointer-events-none h-full"
-        style={{ left: '34%', width: '56%' }}
-        viewBox="0 0 560 100" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M0 42 C 60 30, 20 8, 110 20 S 240 55, 200 72 S 380 90, 540 92" stroke="var(--bordeaux)" strokeWidth="0.45" fill="none" opacity="0.16"/>
-        <path d="M0 96 C 90 80, 150 62, 250 70 S 430 88, 560 84" stroke="var(--terracotta)" strokeWidth="0.35" fill="none" opacity="0.12"/>
-        <path d="M120 100 C 150 80, 90 60, 160 45 S 300 18, 430 12" stroke="var(--bordeaux)" strokeWidth="0.3" fill="none" opacity="0.09"/>
-      </svg>
+      {/* ══ Panneau droit — Formulaire ══════════════════════ */}
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        background: '#F4F6F9', position: 'relative', zIndex: 20,
+      }}>
 
-      {/* ══ Panneau droit — blanc, formulaire ═══════════════════════════ */}
-      <div className="flex-1 flex flex-col relative min-w-0 z-20">
-
-        {/* Logos institutionnels — haut à droite */}
-        <header className="px-6 sm:px-10 pt-5 flex items-center justify-end gap-4">
-          <img src="/Logo ENCG couleur.png" alt="ENCG Marrakech — Université Cadi Ayyad" className="h-11 sm:h-12 object-contain" />
+        {/* ENCG Logo top right */}
+        <header style={{ padding: '20px 40px', display: 'flex', justifyContent: 'flex-end' }}>
+          <img src="/Logo ENCG couleur.png" alt="ENCG Marrakech"
+            style={{ height: 48, objectFit: 'contain' }} />
         </header>
 
-        {/* Formulaire centré */}
-        <div className="flex-1 flex items-center justify-center px-6 py-6">
-          <div className="w-full max-w-sm animate-slide-up">
+        {/* Form — parfaitement centré */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px 40px' }}>
+          <div style={{ width: '100%', maxWidth: 400 }} className="animate-fade-up">
 
-            {/* Robot mobile */}
-            <div className="lg:hidden flex justify-center mb-4">
-              <img src="/nora_robot.png" alt="" aria-hidden="true" className="w-36 object-contain drop-shadow-xl" />
+            {/* Mobile robot */}
+            <div className="lg:hidden" style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+              <img src="/nora_robot.png" alt="" aria-hidden="true"
+                style={{ width: 96, objectFit: 'contain', filter: 'drop-shadow(0 8px 20px rgba(128,0,32,.2))' }} />
             </div>
 
-            {/* Grand titre */}
-            <h2 className="font-modern font-extrabold text-[1.85rem] sm:text-4xl leading-[1.15] tracking-tight"
-              style={{ color: '#26221F' }}>
-              Gérez la<br />connaissance.<br />Propulsez NORA !
-            </h2>
+            {/* Heading */}
+            <div style={{ marginBottom: 32 }}>
+              <h2 style={{
+                fontFamily: "'Plus Jakarta Sans', Inter, sans-serif",
+                fontSize: 34, fontWeight: 900,
+                color: '#0F172A', lineHeight: 1.15, letterSpacing: -0.5,
+              }}>
+                Bienvenue<br />
+                <span style={{ color: 'var(--brand)' }}>sur NORA</span>
+              </h2>
+              <p style={{ fontSize: 13.5, color: '#64748B', marginTop: 10, lineHeight: 1.6 }}>
+                Connectez-vous pour accéder au tableau de bord.
+              </p>
+            </div>
 
-            {/* Erreur */}
+            {/* Error */}
             {error && (
-              <div key={error} role="alert"
-                className="flex items-start gap-2.5 px-4 py-3 rounded-xl mt-6 animate-shake"
-                style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
-                <AlertCircle size={16} className="shrink-0 mt-0.5" style={{ color: 'var(--danger)' }} />
-                <p className="text-sm font-medium" style={{ color: '#B91C1C' }}>{error}</p>
+              <div role="alert" className="animate-shake"
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                  padding: '12px 14px', borderRadius: 12, marginBottom: 20,
+                  background: '#FEF2F2', border: '1px solid #FECACA',
+                }}>
+                <AlertCircle size={15} style={{ color: '#EF4444', flexShrink: 0, marginTop: 1 }} />
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#B91C1C' }}>{error}</p>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5 mt-8" noValidate>
+            {/* Form */}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }} noValidate>
 
               {/* Email */}
               <div>
-                <label htmlFor="admin-email"
-                  className="font-modern block text-[13px] font-semibold mb-2"
-                  style={{ color: '#57504A' }}>
-                  Adresse e-mail
+                <label htmlFor="admin-email" style={{
+                  display: 'block', fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase',
+                  letterSpacing: '0.07em', color: '#475569', marginBottom: 7,
+                }}>
+                  Adresse e-mail <span style={{ color: 'var(--brand)' }}>*</span>
                 </label>
-                <div className="relative">
-                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-                    style={{ color: 'var(--brown-muted)' }} />
+                <div style={{ position: 'relative' }}>
+                  <Mail size={15} style={{
+                    position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                    pointerEvents: 'none', color: '#94A3B8',
+                  }} />
                   <input
-                    id="admin-email"
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    autoFocus
-                    required
+                    id="admin-email" type="email" inputMode="email"
+                    autoComplete="email" autoFocus required
                     value={form.email}
                     onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                    placeholder="Adresse e-mail"
+                    placeholder="admin@encg-marrakech.ma"
                     className="input-box"
                   />
                 </div>
               </div>
 
-              {/* Mot de passe */}
+              {/* Password */}
               <div>
-                <label htmlFor="admin-password"
-                  className="font-modern block text-[13px] font-semibold mb-2"
-                  style={{ color: '#57504A' }}>
-                  Mot de passe
+                <label htmlFor="admin-password" style={{
+                  display: 'block', fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase',
+                  letterSpacing: '0.07em', color: '#475569', marginBottom: 7,
+                }}>
+                  Mot de passe <span style={{ color: 'var(--brand)' }}>*</span>
                 </label>
-                <div className="relative">
-                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-                    style={{ color: 'var(--brown-muted)' }} />
+                <div style={{ position: 'relative' }}>
+                  <Lock size={15} style={{
+                    position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                    pointerEvents: 'none', color: '#94A3B8',
+                  }} />
                   <input
                     id="admin-password"
                     type={showPwd ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    required
+                    autoComplete="current-password" required
                     value={form.password}
                     onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                    placeholder="Entrez votre mot de passe"
+                    placeholder="••••••••••"
                     className="input-box"
-                    style={{ paddingRight: '2.75rem' }}
+                    style={{ paddingRight: 44 }}
                   />
                   <button type="button"
                     onClick={() => setShowPwd(p => !p)}
-                    aria-label={showPwd ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors hover:bg-black/5"
-                    style={{ color: 'var(--brown-muted)' }}>
-                    {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                    aria-label={showPwd ? 'Masquer' : 'Afficher'}
+                    style={{
+                      position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                      width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      border: 'none', background: 'transparent', cursor: 'pointer',
+                      color: '#94A3B8', borderRadius: 8, transition: 'background .15s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#F1F5F9'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
               </div>
 
-              {/* Submit + lien oublié */}
-              <div className="flex flex-col items-center mt-1">
+              {/* Submit */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
                 <button id="admin-login-btn" type="submit" disabled={loading}
-                  className="font-modern w-[65%] py-3 inline-flex items-center justify-center gap-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0"
+                  className="btn btn-primary"
                   style={{
-                    background: 'var(--bordeaux)',
-                    boxShadow: '0 6px 16px rgba(133,24,26,.30)',
-                  }}>
-                  {loading
-                    ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Connexion…</>
-                    : <span className="flex items-center gap-2">Se connecter <ArrowRight size={16} /></span>
-                  }
+                    width: '100%', height: 50, fontSize: 14, fontWeight: 700,
+                    borderRadius: 14,
+                  }}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                      Connexion en cours…
+                    </>
+                  ) : (
+                    <>Se connecter <ArrowRight size={16} /></>
+                  )}
                 </button>
-                <span className="font-modern mt-3 text-xs font-medium cursor-pointer transition-colors hover:opacity-80"
-                  style={{ color: 'var(--brown-muted)' }}
-                  title="Contactez l'administrateur système pour réinitialiser votre mot de passe.">
+                <button type="button"
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontSize: 12.5, color: '#94A3B8', fontWeight: 500,
+                    padding: '4px 0', textAlign: 'center',
+                    transition: 'color .15s',
+                  }}
+                  title="Contactez l'administrateur système."
+                  onMouseEnter={e => e.currentTarget.style.color = '#64748B'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#94A3B8'}
+                >
                   Mot de passe oublié ?
-                </span>
+                </button>
               </div>
             </form>
           </div>
         </div>
 
+        {/* Footer */}
+        <footer style={{ padding: '0 40px 20px', textAlign: 'center' }}>
+          <p style={{ fontSize: 11, color: '#CBD5E1', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <Lock size={9} style={{ color: 'var(--brand)' }} />
+            © {new Date().getFullYear()} ENCG Marrakech · Session sécurisée 12h
+          </p>
+        </footer>
       </div>
-
-      {/* Footer centré sur toute la largeur (à cheval sur les deux panneaux) */}
-      <footer className="absolute bottom-3.5 left-0 right-0 z-30 text-center pointer-events-none">
-        <p className="font-modern inline-flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--brown-muted)' }}>
-          <Lock size={11} style={{ color: 'var(--bordeaux)' }} />
-          © 2025 ENCG Marrakech | Connexion sécurisée — session valide 12 h
-        </p>
-      </footer>
     </div>
   )
 }
