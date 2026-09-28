@@ -1,0 +1,338 @@
+# ============================================================
+#  NORA — Chatbot ENCG Marrakech | GitLab CI/CD Pipeline
+#  Branche cible : main → deploy (production)
+# ============================================================
+
+# ─────────────────────────────────────────────────────────────
+#  VARIABLES GLOBALES
+# ─────────────────────────────────────────────────────────────
+variables:
+  # Docker Compose
+  COMPOSE_FILE: docker-compose.prod.yml
+  DOCKER_DRIVER: overlay2
+
+  # Images du projet (registre GitLab)
+  BACKEND_IMAGE: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
+  FRONTEND_IMAGE: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
+  BACKEND_ADMIN_IMAGE: $CI_REGISTRY_IMAGE/backend_admin:$CI_COMMIT_SHORT_SHA
+  FRONTEND_ADMIN_IMAGE: $CI_REGISTRY_IMAGE/frontend_admin:$CI_COMMIT_SHORT_SHA
+  BACKEND_IMAGE_LATEST: $CI_REGISTRY_IMAGE/backend:latest
+  FRONTEND_IMAGE_LATEST: $CI_REGISTRY_IMAGE/frontend:latest
+  BACKEND_ADMIN_IMAGE_LATEST: $CI_REGISTRY_IMAGE/backend_admin:latest
+  FRONTEND_ADMIN_IMAGE_LATEST: $CI_REGISTRY_IMAGE/frontend_admin:latest
+
+  # Déploiement serveur (à configurer dans GitLab > Settings > CI/CD > Variables)
+  # SSH_PRIVATE_KEY   : Clé SSH privée pour se connecter au serveur
+  # DEPLOY_HOST       : IP ou hostname du serveur Ubuntu
+  # DEPLOY_USER       : Utilisateur SSH (ex: ubuntu, root)
+  # DEPLOY_PATH       : Chemin du projet sur le serveur (ex: /home/ubuntu/nora-chatbot)
+  # ENV_FILE_CONTENT  : Contenu complet du fichier .env de production
+
+# ─────────────────────────────────────────────────────────────
+#  STAGES
+# ─────────────────────────────────────────────────────────────
+stages:
+  - lint
+  - build
+  - test
+  - deploy
+
+# ─────────────────────────────────────────────────────────────
+#  STAGE 1 : LINT — Vérification de la qualité du code
+# ─────────────────────────────────────────────────────────────
+
+lint:backend:
+  stage: lint
+  image: python:3.10-slim
+  before_script:
+    - pip install --quiet flake8
+  script:
+    - echo "🔍 Lint du backend Python (public + admin)..."
+    - flake8 backend/ --max-line-length=120 --exclude=venv,__pycache__,data --count --statistics || true
+    - flake8 backend_admin/ --max-line-length=120 --exclude=venv,__pycache__,data --count --statistics || true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  allow_failure: true
+
+lint:frontend:
+  stage: lint
+  image: node:18-alpine
+  before_script:
+    - cd frontend
+    - npm ci --legacy-peer-deps --silent
+  script:
+    - echo "🔍 Lint du frontend React..."
+    - npx eslint src --ext js,jsx --max-warnings=50 || true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  allow_failure: true
+  cache:
+    key: frontend-node-modules
+    paths:
+      - frontend/node_modules/
+
+lint:frontend_admin:
+  stage: lint
+  image: node:20-alpine
+  before_script:
+    - cd frontend_admin
+    - npm ci --silent
+  script:
+    - echo "🔍 Lint du frontend admin..."
+    - npx oxlint || true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  allow_failure: true
+  cache:
+    key: frontend-admin-node-modules
+    paths:
+      - frontend_admin/node_modules/
+
+# ─────────────────────────────────────────────────────────────
+#  STAGE 2 : BUILD — Construction des images Docker
+# ─────────────────────────────────────────────────────────────
+
+build:backend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "🏗️ Build de l'image backend..."
+    - docker build -t $BACKEND_IMAGE -t $BACKEND_IMAGE_LATEST ./backend
+    - docker push $BACKEND_IMAGE
+    - docker push $BACKEND_IMAGE_LATEST
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+build:frontend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "🏗️ Build de l'image frontend..."
+    - docker build -t $FRONTEND_IMAGE -t $FRONTEND_IMAGE_LATEST ./frontend
+    - docker push $FRONTEND_IMAGE
+    - docker push $FRONTEND_IMAGE_LATEST
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+build:backend_admin:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "🏗️ Build de l'image backend_admin..."
+    - docker build -t $BACKEND_ADMIN_IMAGE -t $BACKEND_ADMIN_IMAGE_LATEST ./backend_admin
+    - docker push $BACKEND_ADMIN_IMAGE
+    - docker push $BACKEND_ADMIN_IMAGE_LATEST
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+build:frontend_admin:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "🏗️ Build de l'image frontend_admin..."
+    - docker build -f frontend_admin/Dockerfile.prod -t $FRONTEND_ADMIN_IMAGE -t $FRONTEND_ADMIN_IMAGE_LATEST ./frontend_admin
+    - docker push $FRONTEND_ADMIN_IMAGE
+    - docker push $FRONTEND_ADMIN_IMAGE_LATEST
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# ─────────────────────────────────────────────────────────────
+#  STAGE 3 : TEST — Tests de santé basiques
+# ─────────────────────────────────────────────────────────────
+
+test:backend:
+  stage: test
+  image: python:3.10-slim
+  services:
+    - name: postgres:15-alpine
+      alias: test-db
+      variables:
+        POSTGRES_DB: nora_test_db
+        POSTGRES_USER: nora_user
+        POSTGRES_PASSWORD: nora_test_password
+  variables:
+    DB_HOST: test-db
+    DB_PORT: "5432"
+    DB_NAME: nora_test_db
+    DB_USER: nora_user
+    DB_PASSWORD: nora_test_password
+    FLASK_ENV: development
+    SECRET_KEY: test-secret-key
+    AI_API_KEY: ""
+    AI_PROVIDER: gemini
+    AI_MODEL: gemini-3.5-flash-lite
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends libpq-dev gcc curl
+    - pip install --quiet -r backend/requirements.txt
+  script:
+    - echo "🧪 Test de démarrage du backend..."
+    - cd backend
+    # Vérifie que l'app Flask démarre sans erreur
+    - python -c "from app import create_app; app = create_app('development'); print('✅ Flask app created successfully')"
+    # Vérifie l'import des modules critiques
+    - python -c "from app.services.gemini_service import GeminiService; print('✅ GeminiService import OK')"
+    - python -c "from app.services.search_service import SearchService; print('✅ SearchService import OK')"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+test:backend_admin:
+  stage: test
+  image: python:3.10-slim
+  services:
+    - name: postgres:15-alpine
+      alias: test-db
+      variables:
+        POSTGRES_DB: nora_test_db
+        POSTGRES_USER: nora_user
+        POSTGRES_PASSWORD: nora_test_password
+  variables:
+    DB_HOST: test-db
+    DB_PORT: "5432"
+    DB_NAME: nora_test_db
+    DB_USER: nora_user
+    DB_PASSWORD: nora_test_password
+    FLASK_ENV: development
+    SECRET_KEY_ADMIN: test-admin-secret-key
+    AI_API_KEY: ""
+    EMBEDDING_MODEL: models/text-embedding-004
+    CORS_ORIGINS_ADMIN: "http://localhost:5174"
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends libpq-dev gcc curl
+    - pip install --quiet -r backend_admin/requirements.txt
+  script:
+    - echo "🧪 Test de démarrage du backend admin..."
+    - cd backend_admin
+    - python -c "from app import create_app; app = create_app('development'); print('✅ Flask Admin app created successfully')"
+    - python -c "from app.models import db; print('✅ Admin models import OK')"
+    - python -c "from app.auth import require_admin; print('✅ Admin auth import OK')"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+test:frontend-build:
+  stage: test
+  image: node:18-alpine
+  before_script:
+    - cd frontend
+    - npm ci --legacy-peer-deps --silent
+  script:
+    - echo "🧪 Test du build frontend..."
+    - npm run build
+    - echo "✅ Build React réussi — fichiers dans dist/"
+    - ls -la dist/
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  cache:
+    key: frontend-node-modules
+    paths:
+      - frontend/node_modules/
+
+test:frontend-admin-build:
+  stage: test
+  image: node:20-alpine
+  before_script:
+    - cd frontend_admin
+    - npm ci --silent
+  script:
+    - echo "🧪 Test du build frontend admin..."
+    - npm run build
+    - echo "✅ Build React Admin réussi — fichiers dans dist/"
+    - ls -la dist/
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  cache:
+    key: frontend-admin-node-modules
+    paths:
+      - frontend_admin/node_modules/
+
+# ─────────────────────────────────────────────────────────────
+#  STAGE 4 : DEPLOY — Déploiement automatique sur le serveur
+# ─────────────────────────────────────────────────────────────
+
+deploy:production:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    # Installation des outils SSH
+    - apk add --no-cache openssh-client rsync
+    # Configuration de la clé SSH
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H $DEPLOY_HOST >> ~/.ssh/known_hosts 2>/dev/null
+  script:
+    - echo "🚀 Déploiement en production sur $DEPLOY_HOST..."
+
+    # 1. Synchronisation des fichiers vers le serveur
+    - |
+      rsync -avz --delete \
+        --exclude='.git' \
+        --exclude='node_modules' \
+        --exclude='venv' \
+        --exclude='.env' \
+        --exclude='backend/data/*.json' \
+        --exclude='__pycache__' \
+        --exclude='frontend/dist' \
+        --exclude='frontend_admin/dist' \
+        ./ $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/
+
+    # 2. Écriture du fichier .env de production sur le serveur
+    - |
+      ssh $DEPLOY_USER@$DEPLOY_HOST "cat > $DEPLOY_PATH/.env << 'ENVEOF'
+      $ENV_FILE_CONTENT
+      ENVEOF"
+
+    # 3. Build et redémarrage des conteneurs sur le serveur
+    - |
+      ssh $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+        cd $DEPLOY_PATH
+        echo "📦 Pull des images et reconstruction..."
+        docker compose -f docker-compose.prod.yml down --remove-orphans
+        docker compose -f docker-compose.prod.yml up -d --build
+        echo "⏳ Attente du healthcheck (45s)..."
+        sleep 45
+        echo "📊 État des conteneurs :"
+        docker compose -f docker-compose.prod.yml ps
+        echo "🔍 Test de santé du backend public :"
+        curl -sf http://localhost:5000/api/health || echo "⚠️ Backend public pas encore prêt"
+        echo "🔍 Test de santé du backend admin :"
+        curl -sf http://localhost:5001/api/admin/health || echo "⚠️ Backend admin pas encore prêt"
+        echo "🔍 Test du frontend public (port 80) :"
+        curl -sf -o /dev/null -w "%{http_code}" http://localhost:80 || echo "⚠️ Frontend pas encore prêt"
+        echo "🔍 Test du frontend admin (port 8080) :"
+        curl -sf -o /dev/null -w "%{http_code}" http://localhost:8080 || echo "⚠️ Frontend admin pas encore prêt"
+        echo ""
+        echo "🧹 Nettoyage des anciennes images..."
+        docker image prune -f
+        echo "✅ Déploiement terminé !"
+      EOF
+  rules:
+    # Déploiement automatique uniquement sur la branche main
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  environment:
+    name: production
+    url: http://$DEPLOY_HOST
+  when: on_success
+  allow_failure: false

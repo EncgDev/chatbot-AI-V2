@@ -26,6 +26,8 @@ env/
 node_modules/
 frontend/dist/
 frontend/node_modules/
+frontend_admin/dist/
+frontend_admin/node_modules/
 .npm
 
 # IDE & OS

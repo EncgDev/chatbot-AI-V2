@@ -1,0 +1,156 @@
+# ============================================================
+#  NORA — Chatbot ENCG Marrakech | Docker Compose PRODUCTION
+#  Fichier utilisé par le pipeline CI/CD GitLab
+#  5 services : db, backend, frontend, backend_admin, frontend_admin
+# ============================================================
+name: chatbot-ai-v2
+
+services:
+  # ─────────────────────────────────────────────
+  #  SERVICE 1 : Base de données PostgreSQL 15
+  # ─────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: nora_v2_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nora_db}
+      POSTGRES_USER: ${POSTGRES_USER:-nora_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nora_secret_password}
+    volumes:
+      - postgres_data_v2:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./database/encgm_training_dataset_inserts.sql:/docker-entrypoint-initdb.d/02-inserts.sql:ro
+    # Production : pas d'exposition externe de PostgreSQL
+    expose:
+      - "5432"
+    networks:
+      - nora_v2_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nora_user} -d ${POSTGRES_DB:-nora_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  #  SERVICE 2 : Backend Flask (Gunicorn)
+  # ─────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nora_v2_backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-nora_db}
+      DB_USER: ${POSTGRES_USER:-nora_user}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-nora_secret_password}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_PROVIDER: ${AI_PROVIDER:-gemini}
+      AI_MODEL: ${AI_MODEL:-gemini-3.5-flash-lite}
+      FLASK_ENV: production
+      SECRET_KEY: ${SECRET_KEY:-change-me}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+    expose:
+      - "5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - nora_v2_network
+    volumes:
+      # Partage bidirectionnel des embeddings avec backend_admin
+      - backend_shared_data:/app/data
+
+  # ─────────────────────────────────────────────
+  #  SERVICE 3 : Frontend React (Nginx prod)
+  #  Port 80 — Interface publique du chatbot
+  #  Nginx reverse-proxy /api/* → backend:5000
+  # ─────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # En production avec reverse-proxy nginx, VITE_API_URL reste vide
+        # car les appels /api/* sont proxiés par nginx vers backend:5000
+        VITE_API_URL: ""
+    container_name: nora_v2_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - nora_v2_network
+
+  # ─────────────────────────────────────────────
+  #  SERVICE 4 : Backend Admin Flask (Back-Office CRUD)
+  #  🔐 Même BDD partagée, API séparée sur /api/admin/*
+  # ─────────────────────────────────────────────
+  backend_admin:
+    build:
+      context: ./backend_admin
+      dockerfile: Dockerfile
+    container_name: nora_v2_backend_admin
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-nora_db}
+      DB_USER: ${POSTGRES_USER:-nora_user}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-nora_secret_password}
+      AI_API_KEY: ${AI_API_KEY:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-models/text-embedding-004}
+      SECRET_KEY_ADMIN: ${SECRET_KEY_ADMIN:-change-me-admin}
+      CORS_ORIGINS_ADMIN: ${CORS_ORIGINS_ADMIN:-http://localhost:8080}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      DATA_DIR: /app/data
+      FLASK_ENV: production
+    expose:
+      - "5001"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - nora_v2_network
+    volumes:
+      # Partage des embeddings avec le backend public (régénération admin)
+      - backend_shared_data:/app/data
+
+  # ─────────────────────────────────────────────
+  #  SERVICE 5 : Frontend Admin React (Nginx prod)
+  #  Port 8080 — Interface admin du back-office
+  #  Nginx reverse-proxy /api/admin/* → backend_admin:5001
+  # ─────────────────────────────────────────────
+  frontend_admin:
+    build:
+      context: ./frontend_admin
+      dockerfile: Dockerfile.prod
+      args:
+        # En production avec reverse-proxy nginx, VITE_ADMIN_API_URL reste vide
+        VITE_ADMIN_API_URL: ""
+    container_name: nora_v2_frontend_admin
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend_admin
+    networks:
+      - nora_v2_network
+
+# ─────────────────────────────────────────────
+#  VOLUMES & RÉSEAU
+# ─────────────────────────────────────────────
+volumes:
+  postgres_data_v2:
+    driver: local
+  backend_shared_data:
+    driver: local
+
+networks:
+  nora_v2_network:
+    driver: bridge
